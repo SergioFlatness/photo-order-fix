@@ -29,12 +29,13 @@ class ReorderPlannerTest {
     }
 
     @Test
-    fun `videos grouped on top are moved back between photos`() {
+    fun `a video added after newer photos only needs those photos re-saved`() {
         val photos = listOf(item(1, 100, 1_000), item(2, 101, 3_000))
         val video = item(3, 200, 2_000) // taken between the photos, added after them
         val plan = ReorderPlanner.plan(photos + video)
-        assertEquals(listOf(1L), plan.kept.map { it.id })
-        assertEquals(listOf(3L, 2L), plan.toResave.map { it.id })
+        // Re-saving only photo 2 gives it the newest "added" time: 2, 3, 1 is newest-first.
+        assertEquals(listOf(1L, 3L), plan.kept.map { it.id })
+        assertEquals(listOf(2L), plan.toResave.map { it.id })
     }
 
     @Test
