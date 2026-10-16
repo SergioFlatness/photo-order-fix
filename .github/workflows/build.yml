@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -29,3 +31,19 @@ jobs:
         with:
           name: photo-order-fix-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      # Every change on main replaces the "latest" test build, downloadable without a GitHub login:
+      # https://github.com/<owner>/<repo>/releases/download/latest/photo-order-fix.apk
+      - name: Publish the latest test build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk photo-order-fix.apk
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest photo-order-fix.apk \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "Latest test build" \
+            --notes "Test build from commit $GITHUB_SHA. Requires Android 11 or newer."
