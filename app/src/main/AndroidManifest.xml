@@ -11,6 +11,9 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- Lets us read photos with their location intact. Without it Android hides GPS data,
+         and our copies would lose it. -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <!-- Optional "Media management" access: skips the repeated delete confirmations. -->
     <uses-permission
         android:name="android.permission.MANAGE_MEDIA"

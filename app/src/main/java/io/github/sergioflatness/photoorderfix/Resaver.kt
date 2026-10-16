@@ -44,7 +44,10 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
             ?: throw IOException("Could not create a new entry for ${item.name}")
 
         try {
-            val copied = resolver.openInputStream(item.uri).use { input ->
+            // Without setRequireOriginal Android hands us the file with its location data blanked out.
+            // This throws when the Media location permission is missing, so the item fails instead of
+            // being copied without its location.
+            val copied = resolver.openInputStream(MediaStore.setRequireOriginal(item.uri)).use { input ->
                 input ?: throw IOException("Could not read ${item.name}")
                 resolver.openOutputStream(newUri, "w").use { output ->
                     output ?: throw IOException("Could not write ${item.name}")
