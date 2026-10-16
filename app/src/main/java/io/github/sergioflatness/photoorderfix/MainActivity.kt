@@ -37,6 +37,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -72,7 +75,7 @@ private fun mediaPermissions(): Array<String> = when {
         Manifest.permission.READ_MEDIA_VIDEO,
     )
     else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-}
+} + Manifest.permission.ACCESS_MEDIA_LOCATION
 
 @Composable
 private fun App(viewModel: MainViewModel) {
@@ -97,6 +100,17 @@ private fun App(viewModel: MainViewModel) {
         if (full || partial) viewModel.scan(partialAccess = !full)
     }
 
+    var hasLocationAccess by remember { mutableStateOf(granted(Manifest.permission.ACCESS_MEDIA_LOCATION)) }
+    val locationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        hasLocationAccess = ok
+        // Android stops showing the dialog after the user declines twice, so send them to settings.
+        if (!ok) {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
+            )
+        }
+    }
+
     val consentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result -> viewModel.onConsentResult(result.resultCode == Activity.RESULT_OK) }
@@ -107,6 +121,7 @@ private fun App(viewModel: MainViewModel) {
 
     LifecycleResumeEffect(Unit) {
         viewModel.refreshManageMedia()
+        hasLocationAccess = granted(Manifest.permission.ACCESS_MEDIA_LOCATION)
         onPauseOrDispose { }
     }
 
@@ -140,6 +155,8 @@ private fun App(viewModel: MainViewModel) {
                 is UiState.Ready -> ReadyScreen(
                     summary = s.summary,
                     canManageMedia = canManageMedia,
+                    hasLocationAccess = hasLocationAccess,
+                    onRequestLocation = { locationLauncher.launch(Manifest.permission.ACCESS_MEDIA_LOCATION) },
                     onFix = viewModel::fix,
                     onRepairDates = viewModel::repairDates,
                     onManageMedia = {
@@ -188,6 +205,8 @@ private fun App(viewModel: MainViewModel) {
 private fun ReadyScreen(
     summary: ScanSummary,
     canManageMedia: Boolean,
+    hasLocationAccess: Boolean,
+    onRequestLocation: () -> Unit,
     onFix: () -> Unit,
     onRepairDates: () -> Unit,
     onManageMedia: () -> Unit,
@@ -245,12 +264,22 @@ private fun ReadyScreen(
     Text(stringResource(R.string.how_it_works), style = MaterialTheme.typography.bodySmall)
     Text(stringResource(R.string.caveats), style = MaterialTheme.typography.bodySmall)
 
+    if (!hasLocationAccess) {
+        Card {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.location_needed), fontWeight = FontWeight.Bold)
+                Button(onClick = onRequestLocation, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.action_allow_location))
+                }
+            }
+        }
+    }
     if (!canManageMedia && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         OutlinedButton(onClick = onManageMedia, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.action_manage_media))
         }
     }
-    Button(onClick = onFix, modifier = Modifier.fillMaxWidth()) {
+    Button(onClick = onFix, enabled = hasLocationAccess, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.action_fix, summary.toResave))
     }
 }

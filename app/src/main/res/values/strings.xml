@@ -30,4 +30,6 @@
     <string name="dates_repair_failed">%1$d items could not be changed.</string>
     <string name="dates_repaired_hint">The Gallery may take a moment to update. If dates still look old, close the Gallery completely and open it again.</string>
     <string name="summary_duplicates">%1$d files are listed more than once in Android\'s media list:</string>
+    <string name="location_needed">To keep each photo\'s location, allow "Media location" access. Without it Android hides location data from apps, and the re-saved copies would lose it.</string>
+    <string name="action_allow_location">Allow media location</string>
 </resources>
