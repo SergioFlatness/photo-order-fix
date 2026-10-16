@@ -211,6 +211,9 @@ private fun ReadyScreen(
         ),
         fontWeight = FontWeight.Bold,
     )
+    if (summary.movedToNewFolder > 0) {
+        Text(stringResource(R.string.summary_moved, summary.movedToNewFolder))
+    }
     Text(stringResource(R.string.how_it_works), style = MaterialTheme.typography.bodySmall)
     Text(stringResource(R.string.caveats), style = MaterialTheme.typography.bodySmall)
 

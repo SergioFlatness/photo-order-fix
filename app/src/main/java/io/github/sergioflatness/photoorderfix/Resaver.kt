@@ -35,7 +35,7 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, item.name)
             put(MediaStore.MediaColumns.MIME_TYPE, item.mimeType)
-            put(MediaStore.MediaColumns.RELATIVE_PATH, item.relativePath)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, item.targetPath)
             put(MediaStore.MediaColumns.DATE_TAKEN, date.epochMs)
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
