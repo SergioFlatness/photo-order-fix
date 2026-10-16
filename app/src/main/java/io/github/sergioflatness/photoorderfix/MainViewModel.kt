@@ -3,6 +3,7 @@ package io.github.sergioflatness.photoorderfix
 import android.app.Application
 import android.media.MediaScannerConnection
 import android.content.IntentSender
+import android.content.ContentUris
 import android.net.Uri
 import android.os.Build
 import android.os.StatFs
@@ -22,6 +23,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 data class ScanSummary(
     val totalItems: Int,
@@ -59,6 +65,9 @@ sealed interface UiState {
         val ambiguous: Int,
         val notOnPhone: Int,
     ) : UiState
+    /** The user picked photos to give a date of their own choosing. */
+    data class PickDate(val names: List<String>, val count: Int, val initial: String) : UiState
+    data class DatesSet(val fixed: Int, val failed: Int) : UiState
     data class Failed(val message: String) : UiState
 }
 
@@ -66,6 +75,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val resolver = app.contentResolver
     private val resaver = Resaver(resolver)
+    private val manualFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
     private val _state = MutableStateFlow<UiState>(UiState.Intro)
     val state: StateFlow<UiState> = _state.asStateFlow()
@@ -80,6 +90,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var plan: ReorderPlan<DeviceMedia>? = null
     private var repairs: List<PlanItem<DeviceMedia>> = emptyList()
     private var scanned: List<PlanItem<DeviceMedia>> = emptyList()
+    private var picked: List<PlanItem<DeviceMedia>> = emptyList()
     private var pendingConsent: CompletableDeferred<Boolean>? = null
 
     fun refreshManageMedia() {
@@ -241,6 +252,66 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Photos the user picked (from the file picker) to set a date for by hand. */
+    fun pickForDate(uris: List<Uri>) {
+        if (uris.isEmpty()) return
+        val byId = scanned.associateBy { it.id }
+        val items = uris.mapNotNull { uri ->
+            val mediaUri = runCatching { MediaStore.getMediaUri(getApplication(), uri) }.getOrNull() ?: uri
+            runCatching { ContentUris.parseId(mediaUri) }.getOrNull()?.let { byId[it] }
+        }.distinctBy { it.id }
+        if (items.isEmpty()) {
+            _state.value = UiState.DatesSet(fixed = 0, failed = uris.size)
+            return
+        }
+        picked = items
+        val earliest = items.minOf { it.date.epochMs }
+        _state.value = UiState.PickDate(
+            names = items.take(MAX_PICKED_NAMES).map { it.payload.name },
+            count = items.size,
+            initial = manualFormat.format(Instant.ofEpochMilli(earliest).atZone(ZoneId.systemDefault())),
+        )
+    }
+
+    /** Returns false when [text] is not a date like 2026-09-23 14:30, so the screen can say so. */
+    fun applyPickedDate(text: String): Boolean {
+        val ms = parseManualDate(text) ?: return false
+        val items = picked
+        viewModelScope.launch {
+            val notOurs = items.filter { !it.payload.ownedByApp }.map { it.payload.uri }
+            val allowed = notOurs.isEmpty() || askConsent(MediaStore.createWriteRequest(resolver, notOurs).intentSender)
+            val work = if (allowed) items else items.filter { it.payload.ownedByApp }
+            var fixed = 0
+            val paths = ArrayList<String>()
+            _state.value = UiState.Working(0, work.size)
+            withContext(Dispatchers.IO) {
+                work.forEachIndexed { i, item ->
+                    // One second apart, in the order picked, so they keep a stable order.
+                    if (resaver.setDate(item.payload, ms + i * 1000L)) {
+                        fixed++
+                        item.payload.dataPath?.let(paths::add)
+                    }
+                    _state.value = UiState.Working(i + 1, work.size)
+                }
+            }
+            if (paths.isNotEmpty()) {
+                MediaScannerConnection.scanFile(getApplication(), paths.toTypedArray(), null, null)
+            }
+            picked = emptyList()
+            plan = null
+            _state.value = UiState.DatesSet(fixed, items.size - fixed)
+        }
+        return true
+    }
+
+    private fun parseManualDate(text: String): Long? {
+        val t = text.trim()
+        return runCatching { LocalDateTime.parse(t, manualFormat) }
+            .recoverCatching { LocalDate.parse(t).atTime(12, 0) }
+            .getOrNull()
+            ?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+    }
+
     fun onConsentResult(approved: Boolean) {
         _consentRequest.value = null
         pendingConsent?.complete(approved)
@@ -295,6 +366,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val MAX_BATCH_COUNT = 300
         const val MAX_SKIPPED_FOLDERS = 8
         const val MAX_DUPLICATE_EXAMPLES = 3
+        const val MAX_PICKED_NAMES = 5
         const val ONE_DAY_MS = 24L * 60 * 60 * 1000
     }
 }

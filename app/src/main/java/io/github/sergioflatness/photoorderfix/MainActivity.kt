@@ -29,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
@@ -115,6 +116,10 @@ private fun App(viewModel: MainViewModel) {
         viewModel.importTakeout(uris)
     }
 
+    val pickLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        viewModel.pickForDate(uris)
+    }
+
     val consentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result -> viewModel.onConsentResult(result.resultCode == Activity.RESULT_OK) }
@@ -163,6 +168,7 @@ private fun App(viewModel: MainViewModel) {
                     onRequestLocation = { locationLauncher.launch(Manifest.permission.ACCESS_MEDIA_LOCATION) },
                     onFix = viewModel::fix,
                     onRepairDates = viewModel::repairDates,
+                    onPickForDate = { pickLauncher.launch(arrayOf("image/*", "video/*")) },
                     onImportTakeout = { takeoutLauncher.launch(arrayOf("*/*")) },
                     onManageMedia = {
                         context.startActivity(
@@ -208,6 +214,33 @@ private fun App(viewModel: MainViewModel) {
                     OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
                 }
 
+                is UiState.PickDate -> {
+                    var text by remember(s) { mutableStateOf(s.initial) }
+                    var invalid by remember(s) { mutableStateOf(false) }
+                    Text(stringResource(R.string.pick_date_title, s.count), fontWeight = FontWeight.Bold)
+                    s.names.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { text = it; invalid = false },
+                        label = { Text(stringResource(R.string.pick_date_label)) },
+                        isError = invalid,
+                        supportingText = { Text(stringResource(R.string.pick_date_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Button(onClick = { invalid = !viewModel.applyPickedDate(text) }, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.action_apply_date))
+                    }
+                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_cancel)) }
+                }
+
+                is UiState.DatesSet -> {
+                    Text(stringResource(R.string.dates_set, s.fixed), fontWeight = FontWeight.Bold)
+                    if (s.failed > 0) Text(stringResource(R.string.dates_set_failed, s.failed))
+                    if (s.fixed > 0) Text(stringResource(R.string.takeout_next))
+                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                }
+
                 is UiState.Failed -> {
                     Text(stringResource(R.string.error, s.message))
                     OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
@@ -226,6 +259,7 @@ private fun ReadyScreen(
     onFix: () -> Unit,
     onRepairDates: () -> Unit,
     onImportTakeout: () -> Unit,
+    onPickForDate: () -> Unit,
     onManageMedia: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -265,6 +299,10 @@ private fun ReadyScreen(
             Text(stringResource(R.string.takeout_intro), style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = onImportTakeout, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_import_takeout))
+            }
+            Text(stringResource(R.string.pick_date_intro), style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = onPickForDate, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.action_pick_date))
             }
         }
     }
