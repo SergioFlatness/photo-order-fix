@@ -32,4 +32,10 @@
     <string name="summary_duplicates">%1$d files are listed more than once in Android\'s media list:</string>
     <string name="location_needed">To keep each photo\'s location, allow "Media location" access. Without it Android hides location data from apps, and the re-saved copies would lose it.</string>
     <string name="action_allow_location">Allow media location</string>
+    <string name="takeout_intro">Dates wrong after a transfer? Google Photos keeps the date each photo had when it was backed up. Download those photos with Google Takeout (takeout.google.com), then pick the .zip files here. Only dates earlier than the one on your phone are used.</string>
+    <string name="action_import_takeout">Take dates from Google Takeout</string>
+    <string name="takeout_result">Read %1$d dates from Takeout. Fixed %2$d photos.</string>
+    <string name="takeout_failed">%1$d photos could not be changed.</string>
+    <string name="takeout_skipped">Left alone: %1$d already as old or older on the phone, %2$d with a name shared by several files, %3$d not on this phone.</string>
+    <string name="takeout_next">The order changed, so check again and fix the order once more.</string>
 </resources>

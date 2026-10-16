@@ -111,6 +111,10 @@ private fun App(viewModel: MainViewModel) {
         }
     }
 
+    val takeoutLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        viewModel.importTakeout(uris)
+    }
+
     val consentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result -> viewModel.onConsentResult(result.resultCode == Activity.RESULT_OK) }
@@ -159,6 +163,7 @@ private fun App(viewModel: MainViewModel) {
                     onRequestLocation = { locationLauncher.launch(Manifest.permission.ACCESS_MEDIA_LOCATION) },
                     onFix = viewModel::fix,
                     onRepairDates = viewModel::repairDates,
+                    onImportTakeout = { takeoutLauncher.launch(arrayOf("*/*")) },
                     onManageMedia = {
                         context.startActivity(
                             Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA, Uri.parse("package:${context.packageName}"))
@@ -192,6 +197,17 @@ private fun App(viewModel: MainViewModel) {
                     OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
                 }
 
+                is UiState.TakeoutImported -> {
+                    Text(stringResource(R.string.takeout_result, s.found, s.fixed), fontWeight = FontWeight.Bold)
+                    if (s.failed > 0) Text(stringResource(R.string.takeout_failed, s.failed))
+                    Text(
+                        stringResource(R.string.takeout_skipped, s.alreadyEarlier, s.ambiguous, s.notOnPhone),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    if (s.fixed > 0) Text(stringResource(R.string.takeout_next))
+                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                }
+
                 is UiState.Failed -> {
                     Text(stringResource(R.string.error, s.message))
                     OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
@@ -209,6 +225,7 @@ private fun ReadyScreen(
     onRequestLocation: () -> Unit,
     onFix: () -> Unit,
     onRepairDates: () -> Unit,
+    onImportTakeout: () -> Unit,
     onManageMedia: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -239,6 +256,15 @@ private fun ReadyScreen(
                 Button(onClick = onRepairDates, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.action_repair_dates, summary.datesToRepair))
                 }
+            }
+        }
+    }
+
+    Card {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.takeout_intro), style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = onImportTakeout, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.action_import_takeout))
             }
         }
     }

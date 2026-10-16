@@ -3,6 +3,7 @@ package io.github.sergioflatness.photoorderfix
 import android.app.Application
 import android.media.MediaScannerConnection
 import android.content.IntentSender
+import android.net.Uri
 import android.os.Build
 import android.os.StatFs
 import android.provider.MediaStore
@@ -12,6 +13,7 @@ import io.github.sergioflatness.photoorderfix.core.DateSource
 import io.github.sergioflatness.photoorderfix.core.PlanItem
 import io.github.sergioflatness.photoorderfix.core.ReorderPlan
 import io.github.sergioflatness.photoorderfix.core.ReorderPlanner
+import io.github.sergioflatness.photoorderfix.core.TakeoutDates
 import io.github.sergioflatness.photoorderfix.core.TargetFolder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +51,14 @@ sealed interface UiState {
     data class Working(val done: Int, val total: Int) : UiState
     data class Finished(val moved: Int, val failed: Int, val cancelled: Boolean) : UiState
     data class DatesRepaired(val fixed: Int, val failed: Int) : UiState
+    data class TakeoutImported(
+        val found: Int,
+        val fixed: Int,
+        val failed: Int,
+        val alreadyEarlier: Int,
+        val ambiguous: Int,
+        val notOnPhone: Int,
+    ) : UiState
     data class Failed(val message: String) : UiState
 }
 
@@ -69,6 +79,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private var plan: ReorderPlan<DeviceMedia>? = null
     private var repairs: List<PlanItem<DeviceMedia>> = emptyList()
+    private var scanned: List<PlanItem<DeviceMedia>> = emptyList()
     private var pendingConsent: CompletableDeferred<Boolean>? = null
 
     fun refreshManageMedia() {
@@ -82,6 +93,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val items = withContext(Dispatchers.IO) { MediaScanner.scan(getApplication()) }
                 val newPlan = ReorderPlanner.plan(items)
                 plan = newPlan
+                scanned = items
                 repairs = items.filter { needsDateRepair(it) }
                 val duplicates = items
                     .groupBy { (it.payload.dataPath ?: "${it.payload.relativePath}${it.payload.name}").lowercase() }
@@ -180,6 +192,52 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
             repairs = emptyList()
             _state.value = UiState.DatesRepaired(fixed, work.size - fixed)
+        }
+    }
+
+    /** Takes earlier dates from a Google Takeout export (zip or json files) and writes them into the photos. */
+    fun importTakeout(uris: List<Uri>) {
+        if (uris.isEmpty()) return
+        val items = scanned
+        viewModelScope.launch {
+            _state.value = UiState.Scanning
+            try {
+                val entries = withContext(Dispatchers.IO) { TakeoutReader.read(resolver, uris) }
+                val match = TakeoutDates.match(entries, items) { it.name }
+                val fixes = match.fixes
+                // Files another app made need the user's OK before we can write to them.
+                val notOurs = fixes.filter { !it.item.payload.ownedByApp }.map { it.item.payload.uri }
+                val allowed = notOurs.isEmpty() || askConsent(MediaStore.createWriteRequest(resolver, notOurs).intentSender)
+                val work = if (allowed) fixes else fixes.filter { it.item.payload.ownedByApp }
+
+                var fixed = 0
+                val paths = ArrayList<String>()
+                _state.value = UiState.Working(0, work.size)
+                withContext(Dispatchers.IO) {
+                    work.forEachIndexed { i, fix ->
+                        if (resaver.setDate(fix.item.payload, fix.newMs)) {
+                            fixed++
+                            fix.item.payload.dataPath?.let(paths::add)
+                        }
+                        _state.value = UiState.Working(i + 1, work.size)
+                    }
+                }
+                // Ask Android to re-read the files so the new dates reach the Gallery.
+                if (paths.isNotEmpty()) {
+                    MediaScannerConnection.scanFile(getApplication(), paths.toTypedArray(), null, null)
+                }
+                plan = null
+                _state.value = UiState.TakeoutImported(
+                    found = entries.size,
+                    fixed = fixed,
+                    failed = fixes.size - fixed,
+                    alreadyEarlier = match.alreadyEarlier,
+                    ambiguous = match.ambiguous,
+                    notOnPhone = match.notOnPhone,
+                )
+            } catch (e: Exception) {
+                _state.value = UiState.Failed(e.message ?: e.javaClass.simpleName)
+            }
         }
     }
 

@@ -92,6 +92,17 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
     /** Works for files this app created; Android's storage layer allows changing their times. */
     fun setFileTime(path: String, epochMs: Long): Boolean = runCatching { File(path).setLastModified(epochMs) }.getOrDefault(false)
 
+    /**
+     * Gives an existing photo a new date: written into the file where the format allows,
+     * and as the file time, which the Gallery falls back to. Returns false if neither worked.
+     */
+    fun setDate(item: DeviceMedia, epochMs: Long): Boolean {
+        val exif = !item.isVideo && item.mimeType in exifWritable &&
+            runCatching { writeExifDate(item.uri, epochMs) }.isSuccess
+        val time = item.dataPath?.let { setFileTime(it, epochMs) } ?: false
+        return exif || time
+    }
+
     private fun writeExifDate(uri: Uri, epochMs: Long) {
         val text = ExifDate.formatDate(epochMs, zone)
         // Without the zone tags Android throws the date away once the file time drifts.
