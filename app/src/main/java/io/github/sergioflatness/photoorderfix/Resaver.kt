@@ -7,6 +7,7 @@ import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
 import io.github.sergioflatness.photoorderfix.core.DateSource
 import io.github.sergioflatness.photoorderfix.core.ResolvedDate
+import java.io.File
 import java.io.IOException
 import java.time.Instant
 import java.time.ZoneId
@@ -58,6 +59,9 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
             if (!item.isVideo && date.source != DateSource.TAKEN && item.mimeType in exifWritable) {
                 runCatching { writeExifDate(newUri, date.epochMs) }
             }
+            // When the copy is published, Android re-reads the file and drops the DATE_TAKEN we set.
+            // Videos without a readable date then fall back to the file time, so set that too.
+            runCatching { setFileTime(newUri, date.epochMs) }
             resolver.update(newUri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
             return newUri
         } catch (e: Exception) {
@@ -77,6 +81,16 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
     fun discard(copyUri: Uri) {
         runCatching { resolver.delete(copyUri, null, null) }
     }
+
+    private fun setFileTime(uri: Uri, epochMs: Long) {
+        val path = resolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        } ?: return
+        setFileTime(path, epochMs)
+    }
+
+    /** Works for files this app created; Android's storage layer allows changing their times. */
+    fun setFileTime(path: String, epochMs: Long): Boolean = runCatching { File(path).setLastModified(epochMs) }.getOrDefault(false)
 
     private fun writeExifDate(uri: Uri, epochMs: Long) {
         val text = exifFormat.format(Instant.ofEpochMilli(epochMs).atZone(zone))

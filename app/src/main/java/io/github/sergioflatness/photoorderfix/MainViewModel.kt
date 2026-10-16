@@ -1,6 +1,7 @@
 package io.github.sergioflatness.photoorderfix
 
 import android.app.Application
+import android.media.MediaScannerConnection
 import android.content.IntentSender
 import android.os.Build
 import android.os.StatFs
@@ -8,6 +9,7 @@ import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.sergioflatness.photoorderfix.core.DateSource
+import io.github.sergioflatness.photoorderfix.core.PlanItem
 import io.github.sergioflatness.photoorderfix.core.ReorderPlan
 import io.github.sergioflatness.photoorderfix.core.ReorderPlanner
 import io.github.sergioflatness.photoorderfix.core.TargetFolder
@@ -25,6 +27,8 @@ data class ScanSummary(
     val resaveBytes: Long,
     /** Re-saved items that land in a new folder (e.g. iPhoneData/ moves under DCIM/). */
     val movedToNewFolder: Int,
+    /** Copies made earlier whose Gallery date is wrong (videos re-saved by v0.2.0 and older). */
+    val datesToRepair: Int,
     val skipped: Int,
     /** Where the skipped items live, biggest folders first, so we can see why they were skipped. */
     val skippedFolders: List<Pair<String, Int>>,
@@ -41,6 +45,7 @@ sealed interface UiState {
     data class Ready(val summary: ScanSummary) : UiState
     data class Working(val done: Int, val total: Int) : UiState
     data class Finished(val moved: Int, val failed: Int, val cancelled: Boolean) : UiState
+    data class DatesRepaired(val fixed: Int, val failed: Int) : UiState
     data class Failed(val message: String) : UiState
 }
 
@@ -60,6 +65,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val canManageMedia: StateFlow<Boolean> = _canManageMedia.asStateFlow()
 
     private var plan: ReorderPlan<DeviceMedia>? = null
+    private var repairs: List<PlanItem<DeviceMedia>> = emptyList()
     private var pendingConsent: CompletableDeferred<Boolean>? = null
 
     fun refreshManageMedia() {
@@ -70,13 +76,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = UiState.Scanning
         viewModelScope.launch {
             try {
-                val newPlan = withContext(Dispatchers.IO) { ReorderPlanner.plan(MediaScanner.scan(resolver)) }
+                val items = withContext(Dispatchers.IO) { MediaScanner.scan(getApplication()) }
+                val newPlan = ReorderPlanner.plan(items)
                 plan = newPlan
+                repairs = items.filter { needsDateRepair(it) }
                 _state.value = UiState.Ready(
                     ScanSummary(
                         totalItems = newPlan.kept.size + newPlan.toResave.size,
                         toResave = newPlan.toResave.size,
                         resaveBytes = newPlan.resaveBytes,
+                        datesToRepair = repairs.size,
                         movedToNewFolder = newPlan.toResave.count { TargetFolder.isMoved(it.payload.relativePath, it.payload.targetPath) },
                         skipped = newPlan.skipped.size,
                         skippedFolders = newPlan.skipped
@@ -138,6 +147,33 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Sets the file time of earlier copies back to their real date, so the Gallery shows it. */
+    fun repairDates() {
+        val work = repairs
+        if (work.isEmpty()) return
+        viewModelScope.launch {
+            _state.value = UiState.Working(0, work.size)
+            var fixed = 0
+            val paths = ArrayList<String>()
+            withContext(Dispatchers.IO) {
+                work.forEachIndexed { i, item ->
+                    val path = item.payload.dataPath
+                    if (path != null && resaver.setFileTime(path, item.date.epochMs)) {
+                        fixed++
+                        paths += path
+                    }
+                    _state.value = UiState.Working(i + 1, work.size)
+                }
+            }
+            // Ask Android to re-read the files so the new time reaches the Gallery.
+            if (paths.isNotEmpty()) {
+                MediaScannerConnection.scanFile(getApplication(), paths.toTypedArray(), null, null)
+            }
+            repairs = emptyList()
+            _state.value = UiState.DatesRepaired(fixed, work.size - fixed)
+        }
+    }
+
     fun onConsentResult(approved: Boolean) {
         _consentRequest.value = null
         pendingConsent?.complete(approved)
@@ -154,6 +190,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         pendingConsent = deferred
         _consentRequest.value = sender
         return deferred.await()
+    }
+
+    private fun needsDateRepair(item: PlanItem<DeviceMedia>): Boolean {
+        val media = item.payload
+        if (!media.ownedByApp || media.hasMediaStoreDate || item.date.source == DateSource.MODIFIED) return false
+        return kotlin.math.abs(media.modifiedSec * 1000 - item.date.epochMs) > ONE_DAY_MS
     }
 
     private fun skipLabel(item: DeviceMedia): String = when {
@@ -174,5 +216,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val MIN_BATCH_BYTES = 64L * 1024 * 1024
         const val MAX_BATCH_COUNT = 300
         const val MAX_SKIPPED_FOLDERS = 8
+        const val ONE_DAY_MS = 24L * 60 * 60 * 1000
     }
 }

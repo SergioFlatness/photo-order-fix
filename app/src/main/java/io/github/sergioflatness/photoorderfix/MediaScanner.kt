@@ -1,11 +1,15 @@
 package io.github.sergioflatness.photoorderfix
 
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import io.github.sergioflatness.photoorderfix.core.DateResolver
 import io.github.sergioflatness.photoorderfix.core.PlanItem
 import io.github.sergioflatness.photoorderfix.core.TargetFolder
+import io.github.sergioflatness.photoorderfix.core.VideoDate
+import java.nio.ByteBuffer
 import java.time.ZoneId
 
 /** A photo or video in the phone's media list (MediaStore). */
@@ -20,11 +24,18 @@ data class DeviceMedia(
     val sizeBytes: Long,
     /** Folder the re-saved copy goes into; differs from relativePath for folders Android won't let us write to. */
     val targetPath: String,
+    /** Absolute file path, used to fix the file time of copies this app made. */
+    val dataPath: String?,
+    val modifiedSec: Long,
+    /** False when Android has no capture date for it, so the Gallery shows the file time. */
+    val hasMediaStoreDate: Boolean,
+    val ownedByApp: Boolean,
 )
 
 object MediaScanner {
 
-    fun scan(resolver: ContentResolver, zone: ZoneId = ZoneId.systemDefault()): List<PlanItem<DeviceMedia>> {
+    fun scan(context: Context, zone: ZoneId = ZoneId.systemDefault()): List<PlanItem<DeviceMedia>> {
+        val resolver = context.contentResolver
         val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
         val projection = arrayOf(
             MediaStore.Files.FileColumns._ID,
@@ -37,6 +48,8 @@ object MediaScanner {
             MediaStore.MediaColumns.DATE_ADDED,
             MediaStore.MediaColumns.DATE_MODIFIED,
             MediaStore.MediaColumns.DATE_TAKEN,
+            MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.OWNER_PACKAGE_NAME,
         )
         val selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE} IN (?, ?)"
         val args = arrayOf(
@@ -56,6 +69,8 @@ object MediaScanner {
             val addedCol = c.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED)
             val modCol = c.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED)
             val takenCol = c.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN)
+            val dataCol = c.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
+            val ownerCol = c.getColumnIndexOrThrow(MediaStore.MediaColumns.OWNER_PACKAGE_NAME)
 
             while (c.moveToNext()) {
                 val id = c.getLong(idCol)
@@ -65,20 +80,29 @@ object MediaScanner {
                 val path = c.getString(pathCol) ?: ""
                 val mime = c.getString(mimeCol) ?: continue
                 val size = c.getLong(sizeCol)
-                val taken = if (c.isNull(takenCol)) null else c.getLong(takenCol)
+                val storeTaken = if (c.isNull(takenCol)) null else c.getLong(takenCol)
+                val modified = c.getLong(modCol)
 
                 val uri = if (isVideo) {
                     MediaStore.Video.Media.getContentUri(volume, id)
                 } else {
                     MediaStore.Images.Media.getContentUri(volume, id)
                 }
+                // iPhone videos keep their date in a tag Android doesn't read; look for it ourselves.
+                val taken = storeTaken ?: if (isVideo) readVideoDate(resolver, uri) else null
                 val target = TargetFolder.of(path, isVideo)
-                val media = DeviceMedia(id, uri, volume, isVideo, name, path, mime, size, target ?: path)
+                val media = DeviceMedia(
+                    id, uri, volume, isVideo, name, path, mime, size, target ?: path,
+                    dataPath = c.getString(dataCol),
+                    modifiedSec = modified,
+                    hasMediaStoreDate = storeTaken != null,
+                    ownedByApp = c.getString(ownerCol) == context.packageName,
+                )
 
                 result += PlanItem(
                     id = id,
                     addedSec = c.getLong(addedCol),
-                    date = DateResolver.resolve(taken, name, c.getLong(modCol), zone),
+                    date = DateResolver.resolve(taken, name, modified, zone),
                     sizeBytes = size,
                     eligible = size > 0 && target != null,
                     payload = media,
@@ -87,4 +111,11 @@ object MediaScanner {
         }
         return result
     }
+
+    private fun readVideoDate(resolver: ContentResolver, uri: Uri): Long? = runCatching {
+        val pfd = resolver.openFileDescriptor(uri, "r") ?: return@runCatching null
+        ParcelFileDescriptor.AutoCloseInputStream(pfd).channel.use { channel ->
+            VideoDate.read({ pos, buf, len -> channel.read(ByteBuffer.wrap(buf, 0, len), pos) }, channel.size())
+        }
+    }.getOrNull()
 }
