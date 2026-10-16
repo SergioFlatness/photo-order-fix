@@ -23,6 +23,8 @@ data class ScanSummary(
     val toResave: Int,
     val resaveBytes: Long,
     val skipped: Int,
+    /** Where the skipped items live, biggest folders first, so we can see why they were skipped. */
+    val skippedFolders: List<Pair<String, Int>>,
     val fromCaptureDate: Int,
     val fromFileName: Int,
     val fromModifiedTime: Int,
@@ -73,6 +75,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         toResave = newPlan.toResave.size,
                         resaveBytes = newPlan.resaveBytes,
                         skipped = newPlan.skipped.size,
+                        skippedFolders = newPlan.skipped
+                            .groupingBy { skipLabel(it.payload) }
+                            .eachCount()
+                            .entries
+                            .sortedByDescending { it.value }
+                            .take(MAX_SKIPPED_FOLDERS)
+                            .map { it.key to it.value },
                         fromCaptureDate = newPlan.countBySource(DateSource.TAKEN),
                         fromFileName = newPlan.countBySource(DateSource.FILENAME),
                         fromModifiedTime = newPlan.countBySource(DateSource.MODIFIED),
@@ -143,6 +152,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return deferred.await()
     }
 
+    private fun skipLabel(item: DeviceMedia): String = when {
+        item.sizeBytes <= 0 -> "(empty file)"
+        item.relativePath.isEmpty() -> "(no folder)"
+        else -> "${item.volume}: ${item.relativePath}"
+    }
+
     private fun freeBytes(): Long {
         val dir = getApplication<Application>().getExternalFilesDir(null) ?: return 0
         return StatFs(dir.path).availableBytes
@@ -154,5 +169,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private companion object {
         const val MIN_BATCH_BYTES = 64L * 1024 * 1024
         const val MAX_BATCH_COUNT = 300
+        const val MAX_SKIPPED_FOLDERS = 8
     }
 }
