@@ -6,12 +6,11 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
 import io.github.sergioflatness.photoorderfix.core.DateSource
+import io.github.sergioflatness.photoorderfix.core.ExifDate
 import io.github.sergioflatness.photoorderfix.core.ResolvedDate
 import java.io.File
 import java.io.IOException
-import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 /**
  * Re-saves a photo or video as a fresh MediaStore entry with identical bytes.
@@ -21,8 +20,6 @@ import java.time.format.DateTimeFormatter
  * approves the deletion.
  */
 class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = ZoneId.systemDefault()) {
-
-    private val exifFormat = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
 
     // Formats androidx ExifInterface can write into.
     private val exifWritable = setOf("image/jpeg", "image/png", "image/webp")
@@ -96,12 +93,17 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
     fun setFileTime(path: String, epochMs: Long): Boolean = runCatching { File(path).setLastModified(epochMs) }.getOrDefault(false)
 
     private fun writeExifDate(uri: Uri, epochMs: Long) {
-        val text = exifFormat.format(Instant.ofEpochMilli(epochMs).atZone(zone))
+        val text = ExifDate.formatDate(epochMs, zone)
+        // Without the zone tags Android throws the date away once the file time drifts.
+        val offset = ExifDate.formatOffset(epochMs, zone)
         resolver.openFileDescriptor(uri, "rw")?.use { pfd ->
             ExifInterface(pfd.fileDescriptor).apply {
                 setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, text)
                 setAttribute(ExifInterface.TAG_DATETIME_DIGITIZED, text)
                 setAttribute(ExifInterface.TAG_DATETIME, text)
+                setAttribute(ExifInterface.TAG_OFFSET_TIME_ORIGINAL, offset)
+                setAttribute(ExifInterface.TAG_OFFSET_TIME_DIGITIZED, offset)
+                setAttribute(ExifInterface.TAG_OFFSET_TIME, offset)
                 saveAttributes()
             }
         }
