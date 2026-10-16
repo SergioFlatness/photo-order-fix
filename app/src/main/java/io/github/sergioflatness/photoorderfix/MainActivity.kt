@@ -120,6 +120,9 @@ private fun App(viewModel: MainViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            // Shown so testers can tell which build they installed.
+            val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
+            if (version != null) Text("v$version", style = MaterialTheme.typography.bodySmall)
 
             when (val s = state) {
                 UiState.Intro -> {
