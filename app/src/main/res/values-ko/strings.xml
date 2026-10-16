@@ -28,4 +28,5 @@
     <string name="dates_repaired">%1$d개의 날짜를 되돌렸어요.</string>
     <string name="dates_repair_failed">%1$d개는 바꾸지 못했어요.</string>
     <string name="dates_repaired_hint">갤러리에 반영되기까지 잠시 걸릴 수 있어요. 그래도 날짜가 그대로면 갤러리를 완전히 껐다 켜 주세요.</string>
+    <string name="summary_duplicates">안드로이드 사진 목록에 두 번 이상 올라간 파일: %1$d개</string>
 </resources>
