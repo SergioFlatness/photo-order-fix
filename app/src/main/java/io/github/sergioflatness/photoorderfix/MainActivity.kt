@@ -141,6 +141,7 @@ private fun App(viewModel: MainViewModel) {
                     summary = s.summary,
                     canManageMedia = canManageMedia,
                     onFix = viewModel::fix,
+                    onRepairDates = viewModel::repairDates,
                     onManageMedia = {
                         context.startActivity(
                             Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA, Uri.parse("package:${context.packageName}"))
@@ -167,6 +168,13 @@ private fun App(viewModel: MainViewModel) {
                     OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
                 }
 
+                is UiState.DatesRepaired -> {
+                    Text(stringResource(R.string.dates_repaired, s.fixed))
+                    if (s.failed > 0) Text(stringResource(R.string.dates_repair_failed, s.failed))
+                    Text(stringResource(R.string.dates_repaired_hint), style = MaterialTheme.typography.bodySmall)
+                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                }
+
                 is UiState.Failed -> {
                     Text(stringResource(R.string.error, s.message))
                     OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
@@ -181,6 +189,7 @@ private fun ReadyScreen(
     summary: ScanSummary,
     canManageMedia: Boolean,
     onFix: () -> Unit,
+    onRepairDates: () -> Unit,
     onManageMedia: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -195,6 +204,17 @@ private fun ReadyScreen(
                 Text(stringResource(R.string.summary_skipped, summary.skipped))
                 summary.skippedFolders.forEach { (folder, count) ->
                     Text("• $folder  ($count)", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+
+    if (summary.datesToRepair > 0) {
+        Card {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.dates_to_repair, summary.datesToRepair))
+                Button(onClick = onRepairDates, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.action_repair_dates, summary.datesToRepair))
                 }
             }
         }

@@ -86,8 +86,11 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
         val path = resolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)?.use { c ->
             if (c.moveToFirst()) c.getString(0) else null
         } ?: return
-        File(path).setLastModified(epochMs)
+        setFileTime(path, epochMs)
     }
+
+    /** Works for files this app created; Android's storage layer allows changing their times. */
+    fun setFileTime(path: String, epochMs: Long): Boolean = runCatching { File(path).setLastModified(epochMs) }.getOrDefault(false)
 
     private fun writeExifDate(uri: Uri, epochMs: Long) {
         val text = exifFormat.format(Instant.ofEpochMilli(epochMs).atZone(zone))
