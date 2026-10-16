@@ -5,7 +5,9 @@ import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
+import androidx.exifinterface.media.ExifInterface
 import io.github.sergioflatness.photoorderfix.core.DateResolver
+import io.github.sergioflatness.photoorderfix.core.ExifDate
 import io.github.sergioflatness.photoorderfix.core.PlanItem
 import io.github.sergioflatness.photoorderfix.core.TargetFolder
 import io.github.sergioflatness.photoorderfix.core.VideoDate
@@ -88,8 +90,9 @@ object MediaScanner {
                 } else {
                     MediaStore.Images.Media.getContentUri(volume, id)
                 }
-                // iPhone videos keep their date in a tag Android doesn't read; look for it ourselves.
-                val taken = storeTaken ?: if (isVideo) readVideoDate(resolver, uri) else null
+                // When Android has no date, look in the file ourselves: iPhone videos keep it in a tag
+                // Android doesn't read, and Android drops EXIF dates that have no time zone tag.
+                val taken = storeTaken ?: if (isVideo) readVideoDate(resolver, uri) else readExifDate(resolver, uri, zone)
                 val target = TargetFolder.of(path, isVideo)
                 val media = DeviceMedia(
                     id, uri, volume, isVideo, name, path, mime, size, target ?: path,
@@ -111,6 +114,17 @@ object MediaScanner {
         }
         return result
     }
+
+    private fun readExifDate(resolver: ContentResolver, uri: Uri, zone: ZoneId): Long? = runCatching {
+        resolver.openInputStream(uri)?.use { input ->
+            val exif = ExifInterface(input)
+            ExifDate.parse(
+                exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL),
+                exif.getAttribute(ExifInterface.TAG_OFFSET_TIME_ORIGINAL),
+                zone,
+            )
+        }
+    }.getOrNull()
 
     private fun readVideoDate(resolver: ContentResolver, uri: Uri): Long? = runCatching {
         val pfd = resolver.openFileDescriptor(uri, "r") ?: return@runCatching null
