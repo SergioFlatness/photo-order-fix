@@ -241,6 +241,7 @@ private fun ReadyScreen(
     if (summary.movedToNewFolder > 0) {
         Text(stringResource(R.string.summary_moved, summary.movedToNewFolder))
     }
+    Card { Text(stringResource(R.string.cloud_warning), Modifier.padding(16.dp), fontWeight = FontWeight.Bold) }
     Text(stringResource(R.string.how_it_works), style = MaterialTheme.typography.bodySmall)
     Text(stringResource(R.string.caveats), style = MaterialTheme.typography.bodySmall)
 
