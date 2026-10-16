@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
-import io.github.sergioflatness.photoorderfix.core.DateSource
 import io.github.sergioflatness.photoorderfix.core.ExifDate
 import io.github.sergioflatness.photoorderfix.core.ResolvedDate
 import java.io.File
@@ -54,13 +53,11 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
             if (copied != item.sizeBytes) {
                 throw IOException("Copied $copied of ${item.sizeBytes} bytes for ${item.name}")
             }
-            // Screenshots and other files without a capture date: write the date into the copy
-            // so it survives future moves. Best effort, the copy is still valid without it.
-            if (!item.isVideo && date.source != DateSource.TAKEN && item.mimeType in exifWritable) {
-                runCatching { writeExifDate(newUri, date.epochMs) }
-            }
-            // When the copy is published, Android re-reads the file and drops the DATE_TAKEN we set.
-            // Videos without a readable date then fall back to the file time, so set that too.
+            // The copy stays byte-for-byte identical to the original: cloud backups (Google Photos)
+            // only recognise a re-saved photo as the same one when every byte matches, otherwise the
+            // Gallery shows it twice. So the date goes into the file time, not into the file.
+            // When the copy is published, Android re-reads the file and drops the DATE_TAKEN we set;
+            // files without a date inside then fall back to the file time.
             runCatching { setFileTime(newUri, date.epochMs) }
             resolver.update(newUri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
             return newUri
