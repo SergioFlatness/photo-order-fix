@@ -12,7 +12,7 @@
     <string name="summary_resave">%1$d items need to be re-saved (%2$s). Free space: %3$s.</string>
     <string name="summary_moved">%1$d of them are in a folder Android doesn\'t let apps save into (like iPhoneData from Smart Switch). Their copies go to the same folder name under DCIM, so album names stay the same.</string>
     <string name="how_it_works">How it works: each item is copied with identical content, oldest first. Then Android asks you once per batch to allow deleting the originals. If you decline, the copies are removed and nothing changes.</string>
-    <string name="cloud_warning">Before you start: turn off cloud sync in your gallery app (Samsung Gallery: Menu → Settings → Sync photos and videos). Otherwise the old cloud copies stay linked to the deleted originals and every photo can show up twice. Your cloud photos are not deleted by turning sync off.</string>
+    <string name="cloud_warning">Cloud sync can stay on: re-saved copies are identical to the originals, so Google Photos and the Gallery treat them as the same photos. If some photos still show up twice afterwards, turn off sync in the Gallery (Menu → Settings → Sync photos and videos); your cloud photos are not deleted by that.</string>
     <string name="caveats">Good to know: \"Favorite\" marks in your gallery app may be lost. Your gallery\'s own order does not change. Some apps only show the new order after you restart them.</string>
     <string name="action_manage_media">Optional: allow media management to skip repeated confirmations</string>
     <string name="action_fix">Fix order (%1$d items)</string>
