@@ -5,6 +5,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import io.github.sergioflatness.photoorderfix.core.DateResolver
 import io.github.sergioflatness.photoorderfix.core.PlanItem
+import io.github.sergioflatness.photoorderfix.core.TargetFolder
 import java.time.ZoneId
 
 /** A photo or video in the phone's media list (MediaStore). */
@@ -17,14 +18,11 @@ data class DeviceMedia(
     val relativePath: String,
     val mimeType: String,
     val sizeBytes: Long,
+    /** Folder the re-saved copy goes into; differs from relativePath for folders Android won't let us write to. */
+    val targetPath: String,
 )
 
 object MediaScanner {
-
-    // MediaStore only lets an app create images under DCIM/ or Pictures/, and videos under
-    // DCIM/, Movies/ or Pictures/. Files elsewhere could not be re-saved in the same folder.
-    private val imageRoots = listOf("DCIM/", "Pictures/")
-    private val videoRoots = listOf("DCIM/", "Movies/", "Pictures/")
 
     fun scan(resolver: ContentResolver, zone: ZoneId = ZoneId.systemDefault()): List<PlanItem<DeviceMedia>> {
         val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -74,15 +72,15 @@ object MediaScanner {
                 } else {
                     MediaStore.Images.Media.getContentUri(volume, id)
                 }
-                val roots = if (isVideo) videoRoots else imageRoots
-                val media = DeviceMedia(id, uri, volume, isVideo, name, path, mime, size)
+                val target = TargetFolder.of(path, isVideo)
+                val media = DeviceMedia(id, uri, volume, isVideo, name, path, mime, size, target ?: path)
 
                 result += PlanItem(
                     id = id,
                     addedSec = c.getLong(addedCol),
                     date = DateResolver.resolve(taken, name, c.getLong(modCol), zone),
                     sizeBytes = size,
-                    eligible = size > 0 && roots.any { path.startsWith(it) },
+                    eligible = size > 0 && target != null,
                     payload = media,
                 )
             }

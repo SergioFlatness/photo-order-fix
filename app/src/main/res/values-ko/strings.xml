@@ -10,6 +10,7 @@
     <string name="summary_skipped">%1$d개는 이 앱이 다시 저장할 수 없는 폴더에 있어서 그대로 둬요.</string>
     <string name="nothing_to_do">이미 순서가 올바르네요. 고칠 게 없어요.</string>
     <string name="summary_resave">%1$d개를 다시 저장해야 해요 (%2$s). 남은 저장공간: %3$s.</string>
+    <string name="summary_moved">이 중 %1$d개는 안드로이드가 앱 저장을 허락하지 않는 폴더(Smart Switch가 만든 iPhoneData 등)에 있어요. 이 사진들은 DCIM 안의 같은 이름 폴더로 옮겨 저장되고, 앨범 이름은 그대로예요.</string>
     <string name="how_it_works">이렇게 진행돼요: 사진을 오래된 것부터 똑같은 내용으로 복사해요. 그다음 안드로이드가 묶음마다 한 번씩 \"원본을 삭제할까요?\"라고 물어봐요. 거절하면 복사본은 지워지고 아무것도 바뀌지 않아요.</string>
     <string name="caveats">참고: 갤러리의 \"즐겨찾기\" 표시는 사라질 수 있어요. 갤러리 앱의 순서는 그대로예요. 어떤 앱은 껐다 켜야 새 순서가 보여요.</string>
     <string name="action_manage_media">선택: 미디어 관리 권한을 허용하면 확인 창을 여러 번 누르지 않아도 돼요</string>

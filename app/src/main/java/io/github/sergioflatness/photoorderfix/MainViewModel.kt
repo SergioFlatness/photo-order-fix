@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.sergioflatness.photoorderfix.core.DateSource
 import io.github.sergioflatness.photoorderfix.core.ReorderPlan
 import io.github.sergioflatness.photoorderfix.core.ReorderPlanner
+import io.github.sergioflatness.photoorderfix.core.TargetFolder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,8 @@ data class ScanSummary(
     val totalItems: Int,
     val toResave: Int,
     val resaveBytes: Long,
+    /** Re-saved items that land in a new folder (e.g. iPhoneData/ moves under DCIM/). */
+    val movedToNewFolder: Int,
     val skipped: Int,
     /** Where the skipped items live, biggest folders first, so we can see why they were skipped. */
     val skippedFolders: List<Pair<String, Int>>,
@@ -74,6 +77,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         totalItems = newPlan.kept.size + newPlan.toResave.size,
                         toResave = newPlan.toResave.size,
                         resaveBytes = newPlan.resaveBytes,
+                        movedToNewFolder = newPlan.toResave.count { TargetFolder.isMoved(it.payload.relativePath, it.payload.targetPath) },
                         skipped = newPlan.skipped.size,
                         skippedFolders = newPlan.skipped
                             .groupingBy { skipLabel(it.payload) }
