@@ -29,6 +29,9 @@ data class ScanSummary(
     val movedToNewFolder: Int,
     /** Copies made earlier whose Gallery date is wrong (videos re-saved by v0.2.0 and older). */
     val datesToRepair: Int,
+    /** Files listed more than once in Android's media list, to diagnose duplicates in the Gallery. */
+    val duplicateGroups: Int,
+    val duplicateExamples: List<String>,
     val skipped: Int,
     /** Where the skipped items live, biggest folders first, so we can see why they were skipped. */
     val skippedFolders: List<Pair<String, Int>>,
@@ -80,12 +83,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val newPlan = ReorderPlanner.plan(items)
                 plan = newPlan
                 repairs = items.filter { needsDateRepair(it) }
+                val duplicates = items
+                    .groupBy { (it.payload.dataPath ?: "${it.payload.relativePath}${it.payload.name}").lowercase() }
+                    .values
+                    .filter { it.size > 1 }
                 _state.value = UiState.Ready(
                     ScanSummary(
                         totalItems = newPlan.kept.size + newPlan.toResave.size,
                         toResave = newPlan.toResave.size,
                         resaveBytes = newPlan.resaveBytes,
                         datesToRepair = repairs.size,
+                        duplicateGroups = duplicates.size,
+                        duplicateExamples = duplicates.take(MAX_DUPLICATE_EXAMPLES).map { describeDuplicate(it) },
                         movedToNewFolder = newPlan.toResave.count { TargetFolder.isMoved(it.payload.relativePath, it.payload.targetPath) },
                         skipped = newPlan.skipped.size,
                         skippedFolders = newPlan.skipped
@@ -198,6 +207,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return kotlin.math.abs(media.modifiedSec * 1000 - item.date.epochMs) > ONE_DAY_MS
     }
 
+    private fun describeDuplicate(group: List<PlanItem<DeviceMedia>>): String {
+        val first = group.first().payload
+        val rows = group.joinToString("; ") { item ->
+            val m = item.payload
+            val added = java.time.Instant.ofEpochSecond(item.addedSec)
+                .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().toString()
+            "#${m.id} ${m.volume} ${m.sizeBytes}B added $added ${if (m.ownedByApp) "app" else "other"}"
+        }
+        return "${first.relativePath}${first.name}: $rows"
+    }
+
     private fun skipLabel(item: DeviceMedia): String = when {
         item.sizeBytes <= 0 -> "(empty file)"
         item.relativePath.isEmpty() -> "(no folder)"
@@ -216,6 +236,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val MIN_BATCH_BYTES = 64L * 1024 * 1024
         const val MAX_BATCH_COUNT = 300
         const val MAX_SKIPPED_FOLDERS = 8
+        const val MAX_DUPLICATE_EXAMPLES = 3
         const val ONE_DAY_MS = 24L * 60 * 60 * 1000
     }
 }

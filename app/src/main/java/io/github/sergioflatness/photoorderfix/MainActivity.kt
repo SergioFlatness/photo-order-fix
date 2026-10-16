@@ -200,6 +200,10 @@ private fun ReadyScreen(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.summary_total, summary.totalItems))
             Text(stringResource(R.string.summary_dates, summary.fromCaptureDate, summary.fromFileName, summary.fromModifiedTime))
+            if (summary.duplicateGroups > 0) {
+                Text(stringResource(R.string.summary_duplicates, summary.duplicateGroups))
+                summary.duplicateExamples.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+            }
             if (summary.skipped > 0) {
                 Text(stringResource(R.string.summary_skipped, summary.skipped))
                 summary.skippedFolders.forEach { (folder, count) ->
