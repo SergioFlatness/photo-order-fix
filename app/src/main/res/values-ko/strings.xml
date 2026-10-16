@@ -12,6 +12,7 @@
     <string name="summary_resave">%1$d개를 다시 저장해야 해요 (%2$s). 남은 저장공간: %3$s.</string>
     <string name="summary_moved">이 중 %1$d개는 안드로이드가 앱 저장을 허락하지 않는 폴더(Smart Switch가 만든 iPhoneData 등)에 있어요. 이 사진들은 DCIM 안의 같은 이름 폴더로 옮겨 저장되고, 앨범 이름은 그대로예요.</string>
     <string name="how_it_works">이렇게 진행돼요: 사진을 오래된 것부터 똑같은 내용으로 복사해요. 그다음 안드로이드가 묶음마다 한 번씩 \"원본을 삭제할까요?\"라고 물어봐요. 거절하면 복사본은 지워지고 아무것도 바뀌지 않아요.</string>
+    <string name="cloud_warning">시작 전에: 갤러리 앱의 클라우드 동기화를 꺼 주세요 (삼성 갤러리: 메뉴 → 설정 → 사진 및 동영상 동기화). 켜 둔 채로 하면 클라우드에 있던 예전 사본이 남아서 사진이 두 장씩 보일 수 있어요. 동기화를 꺼도 클라우드 사진은 지워지지 않아요.</string>
     <string name="caveats">참고: 갤러리의 \"즐겨찾기\" 표시는 사라질 수 있어요. 갤러리 앱의 순서는 그대로예요. 어떤 앱은 껐다 켜야 새 순서가 보여요.</string>
     <string name="action_manage_media">선택: 미디어 관리 권한을 허용하면 확인 창을 여러 번 누르지 않아도 돼요</string>
     <string name="action_fix">순서 고치기 (%1$d개)</string>
