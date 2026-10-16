@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Photo Order Fix</string>
+    <string name="intro_body">Moved from iPhone to Android and now Instagram, KakaoTalk or other apps show your photos in the wrong order?\n\nThose apps sort by when a file arrived on the phone, not when it was taken. A bulk transfer makes every photo arrive at once, often newest first, so the order comes out reversed or jumbled.\n\nThis app finds each photo\'s real date and re-saves your photos and videos oldest first, so every app shows them newest on top again. Everything happens on your phone. Nothing is uploaded.</string>
+    <string name="action_scan">Check my photos</string>
+    <string name="scanning">Reading dates of your photos and videos…</string>
+    <string name="partial_access">You only shared some photos. To fix the whole library, allow access to all photos and videos in Settings, then check again.</string>
+    <string name="summary_total">%1$d photos and videos found.</string>
+    <string name="summary_dates">Dates came from: capture info %1$d, file name %2$d, file time %3$d.</string>
+    <string name="summary_skipped">%1$d items are in folders this app can\'t re-save into and will be left as they are.</string>
+    <string name="nothing_to_do">Your photos are already in the right order. Nothing to fix.</string>
+    <string name="summary_resave">%1$d items need to be re-saved (%2$s). Free space: %3$s.</string>
+    <string name="how_it_works">How it works: each item is copied with identical content, oldest first. Then Android asks you once per batch to allow deleting the originals. If you decline, the copies are removed and nothing changes.</string>
+    <string name="caveats">Good to know: \"Favorite\" marks in your gallery app may be lost. Your gallery\'s own order does not change. Some apps only show the new order after you restart them.</string>
+    <string name="action_manage_media">Optional: allow media management to skip repeated confirmations</string>
+    <string name="action_fix">Fix order (%1$d items)</string>
+    <string name="working">Re-saving %1$d of %2$d…</string>
+    <string name="working_hint">Keep the app open until it finishes.</string>
+    <string name="finished_ok">Done! %1$d items re-saved. Open Instagram or another app and your newest photos should be on top.</string>
+    <string name="finished_cancelled">Stopped. %1$d items were re-saved before you declined. The rest were left unchanged.</string>
+    <string name="finished_failed">%1$d items could not be copied and were left unchanged.</string>
+    <string name="finished_hint">If an app still shows the old order, close it completely and open it again.</string>
+    <string name="action_again">Start over</string>
+    <string name="error">Something went wrong: %1$s</string>
+</resources>

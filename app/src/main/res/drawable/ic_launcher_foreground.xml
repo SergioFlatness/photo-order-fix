@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Three stacked photo cards with an upward arrow: "newest back on top". -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#99FFFFFF" android:pathData="M34,62h32v8h-32z" />
+    <path android:fillColor="#CCFFFFFF" android:pathData="M34,50h32v8h-32z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M34,38h32v8h-32z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M74,36l-6,8h4v26h4v-26h4z" />
+</vector>
