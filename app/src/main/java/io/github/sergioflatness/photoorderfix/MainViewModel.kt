@@ -79,7 +79,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val items = withContext(Dispatchers.IO) { MediaScanner.scan(getApplication()) }
                 val newPlan = ReorderPlanner.plan(items)
                 plan = newPlan
-                repairs = items.filter(this::needsDateRepair)
+                repairs = items.filter { needsDateRepair(it) }
                 _state.value = UiState.Ready(
                     ScanSummary(
                         totalItems = newPlan.kept.size + newPlan.toResave.size,
