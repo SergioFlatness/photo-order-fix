@@ -69,4 +69,17 @@
     <string name="finished_body">Re-saved %1$d items in the order they were taken. Every app now shows your newest photos on top.</string>
     <string name="stat_resaved">Re-saved</string>
     <string name="stat_failed">Failed</string>
+    <string name="keep_originals">Keep originals for 30 days (undo)</string>
+    <string name="keep_originals_on">Originals go to the phone\'s trash for 30 days instead of being deleted. Until then they use %1$s more space.</string>
+    <string name="keep_originals_off">Originals are deleted right away. Frees space at once, but the fix cannot be undone.</string>
+    <string name="keep_originals_no_room">Not enough free space to keep the originals, so they will be deleted. This fix cannot be undone.</string>
+    <string name="finished_kept">The originals stay in the trash for 30 days. Until then you can undo from the first screen.</string>
+    <string name="undo_available">You can undo the last fix of %1$s items (%2$d days left)</string>
+    <string name="undo_hint">Deletes the copies this app made and brings the originals back from the trash.</string>
+    <string name="action_undo">Undo</string>
+    <string name="undo_done">Undone. %1$s items are back as they were.</string>
+    <string name="undo_done_hint">Your photos are now exactly as before the fix. You can fix them again any time.</string>
+    <string name="undo_missing">%1$s items were no longer in the trash and could not be restored. It may have been emptied.</string>
+    <string name="undo_cancelled">Undo stopped. The originals are still in the trash, so you can continue from the first screen.</string>
+    <string name="working_undo_title">Putting your photos back as they were</string>
 </resources>

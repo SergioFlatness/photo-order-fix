@@ -26,6 +26,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.sergioflatness.photoorderfix.core.UndoLog
 import java.text.NumberFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -187,7 +190,7 @@ fun Notice(text: String) {
 }
 
 @Composable
-fun WorkingScreen(done: Int, total: Int, currentMs: Long?) {
+fun WorkingScreen(done: Int, total: Int, currentMs: Long?, undoing: Boolean = false) {
     val progress = if (total == 0) 0f else done.toFloat() / total
     val track = MaterialTheme.colorScheme.surfaceVariant
     Column(
@@ -238,7 +241,7 @@ fun WorkingScreen(done: Int, total: Int, currentMs: Long?) {
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(stringResource(R.string.working_title), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
+            Text(stringResource(if (undoing) R.string.working_undo_title else R.string.working_title), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
             if (currentMs != null) {
                 val pattern = stringResource(R.string.working_period_pattern)
                 val period = remember(currentMs, pattern) {
@@ -256,7 +259,7 @@ fun WorkingScreen(done: Int, total: Int, currentMs: Long?) {
 }
 
 @Composable
-fun FinishedScreen(moved: Int, failed: Int, cancelled: Boolean, onDone: () -> Unit) {
+fun FinishedScreen(moved: Int, failed: Int, cancelled: Boolean, keptOriginals: Boolean, onDone: () -> Unit) {
     val pop = remember { Animatable(0.6f) }
     LaunchedEffect(Unit) { pop.animateTo(1f, spring(dampingRatio = 0.45f)) }
     Column(
@@ -303,6 +306,7 @@ fun FinishedScreen(moved: Int, failed: Int, cancelled: Boolean, onDone: () -> Un
             Stat(count(failed), stringResource(R.string.stat_failed))
         }
         if (failed > 0) Text(stringResource(R.string.finished_failed, failed))
+        if (keptOriginals) Notice(stringResource(R.string.finished_kept))
         Card(colors = cardColors(), elevation = cardElevation()) {
             Text(
                 stringResource(R.string.finished_hint),
@@ -311,6 +315,63 @@ fun FinishedScreen(moved: Int, failed: Int, cancelled: Boolean, onDone: () -> Un
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        GradientButton(stringResource(R.string.action_again), onClick = onDone)
+    }
+}
+
+/** Shown on the first screen while the last fix can still be undone. */
+@Composable
+fun UndoCard(log: UndoLog, onUndo: () -> Unit) {
+    val days = remember(log) { log.daysLeft(System.currentTimeMillis()) }
+    Card(colors = cardColors(), elevation = cardElevation()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.undo_available, count(log.pairs.size), days), fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.undo_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(shape = outlinedShape, onClick = onUndo, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.action_undo))
+            }
+        }
+    }
+}
+
+/** Choice between trashing originals (undo for 30 days) and deleting them now (frees space at once). */
+@Composable
+fun KeepOriginalsCard(keep: Boolean, canKeep: Boolean, extraBytes: Long, onChange: (Boolean) -> Unit) {
+    val context = LocalContext.current
+    Card(colors = cardColors(), elevation = cardElevation()) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.keep_originals), fontWeight = FontWeight.Bold)
+                Text(
+                    when {
+                        !canKeep -> stringResource(R.string.keep_originals_no_room)
+                        keep -> stringResource(R.string.keep_originals_on, Formatter.formatShortFileSize(context, extraBytes))
+                        else -> stringResource(R.string.keep_originals_off)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = keep, onCheckedChange = onChange, enabled = canKeep, modifier = Modifier.padding(start = 12.dp))
+        }
+    }
+}
+
+@Composable
+fun UndoneScreen(restored: Int, missing: Int, cancelled: Boolean, onDone: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(top = 32.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            if (cancelled) stringResource(R.string.undo_cancelled) else stringResource(R.string.undo_done, count(restored)),
+            fontSize = 22.sp,
+            lineHeight = 30.sp,
+            fontWeight = FontWeight.ExtraBold,
+        )
+        if (missing > 0) Text(stringResource(R.string.undo_missing, count(missing)))
+        if (!cancelled) Notice(stringResource(R.string.undo_done_hint))
         GradientButton(stringResource(R.string.action_again), onClick = onDone)
     }
 }

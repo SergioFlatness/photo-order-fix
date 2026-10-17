@@ -80,6 +80,8 @@ private fun App(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val consent by viewModel.consentRequest.collectAsStateWithLifecycle()
     val canManageMedia by viewModel.canManageMedia.collectAsStateWithLifecycle()
+    val undo by viewModel.undo.collectAsStateWithLifecycle()
+    val keepOriginals by viewModel.keepOriginals.collectAsStateWithLifecycle()
 
     fun granted(permission: String) =
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -149,7 +151,10 @@ private fun App(viewModel: MainViewModel) {
             Header(version)
 
             when (val s = state) {
-                UiState.Intro -> IntroScreen(onScan = { permissionLauncher.launch(mediaPermissions()) })
+                UiState.Intro -> {
+                    undo?.let { UndoCard(it, onUndo = viewModel::undo) }
+                    IntroScreen(onScan = { permissionLauncher.launch(mediaPermissions()) })
+                }
 
                 UiState.Scanning -> {
                     CircularProgressIndicator()
@@ -158,6 +163,8 @@ private fun App(viewModel: MainViewModel) {
 
                 is UiState.Ready -> ReadyScreen(
                     summary = s.summary,
+                    keepOriginals = keepOriginals,
+                    onKeepOriginals = viewModel::setKeepOriginals,
                     canManageMedia = canManageMedia,
                     hasLocationAccess = hasLocationAccess,
                     onRequestLocation = { locationLauncher.launch(Manifest.permission.ACCESS_MEDIA_LOCATION) },
@@ -172,9 +179,11 @@ private fun App(viewModel: MainViewModel) {
                     },
                 )
 
-                is UiState.Working -> WorkingScreen(s.done, s.total, s.currentMs)
+                is UiState.Working -> WorkingScreen(s.done, s.total, s.currentMs, s.undoing)
 
-                is UiState.Finished -> FinishedScreen(s.moved, s.failed, s.cancelled, onDone = viewModel::restart)
+                is UiState.Finished -> FinishedScreen(s.moved, s.failed, s.cancelled, s.keptOriginals, onDone = viewModel::restart)
+
+                is UiState.Undone -> UndoneScreen(s.restored, s.missing, s.cancelled, onDone = viewModel::restart)
 
                 is UiState.DatesRepaired -> {
                     Text(stringResource(R.string.dates_repaired, s.fixed))
@@ -231,6 +240,8 @@ private fun App(viewModel: MainViewModel) {
 @Composable
 private fun ReadyScreen(
     summary: ScanSummary,
+    keepOriginals: Boolean,
+    onKeepOriginals: (Boolean) -> Unit,
     canManageMedia: Boolean,
     hasLocationAccess: Boolean,
     onRequestLocation: () -> Unit,
@@ -288,6 +299,7 @@ private fun ReadyScreen(
     if (summary.movedToNewFolder > 0) {
         Text(stringResource(R.string.summary_moved, summary.movedToNewFolder))
     }
+    KeepOriginalsCard(keepOriginals, summary.canKeepOriginals, summary.resaveBytes, onKeepOriginals)
     Notice(stringResource(R.string.cloud_warning))
     Text(stringResource(R.string.how_it_works), style = MaterialTheme.typography.bodySmall)
     Text(stringResource(R.string.caveats), style = MaterialTheme.typography.bodySmall)
