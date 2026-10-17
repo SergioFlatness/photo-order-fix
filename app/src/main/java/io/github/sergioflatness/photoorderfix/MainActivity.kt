@@ -132,7 +132,12 @@ private fun App(viewModel: MainViewModel) {
         onPauseOrDispose { }
     }
 
-    Scaffold(containerColor = Color.Transparent, modifier = Modifier.background(backgroundBrush())) { padding ->
+    // A transparent container gives Scaffold no content color of its own (it falls back to black), so set it.
+    Scaffold(
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier.background(backgroundBrush()),
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
