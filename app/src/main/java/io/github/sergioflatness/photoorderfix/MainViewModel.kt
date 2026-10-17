@@ -54,7 +54,8 @@ sealed interface UiState {
     data object Intro : UiState
     data object Scanning : UiState
     data class Ready(val summary: ScanSummary) : UiState
-    data class Working(val done: Int, val total: Int) : UiState
+    /** [currentMs] is the date of the item being re-saved, to show which period the work has reached. */
+    data class Working(val done: Int, val total: Int, val currentMs: Long? = null) : UiState
     data class Finished(val moved: Int, val failed: Int, val cancelled: Boolean) : UiState
     data class DatesRepaired(val fixed: Int, val failed: Int) : UiState
     data class TakeoutImported(
@@ -158,7 +159,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         val copy = runCatching { resaver.copy(item.payload, item.date) }.getOrNull()
                         if (copy == null) failed++
                         done++
-                        _state.value = UiState.Working(done, work.size)
+                        _state.value = UiState.Working(done, work.size, item.date.epochMs)
                         copy?.let { item.payload to it }
                     }
                 }

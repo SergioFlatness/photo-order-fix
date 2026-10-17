@@ -52,4 +52,21 @@
     <string name="action_cancel">Cancel</string>
     <string name="dates_set">Changed the date of %1$d photos.</string>
     <string name="dates_set_failed">%1$d could not be changed (photos must be ones this app found in its last scan).</string>
+    <string name="ready_headline_total">Of %1$s items,</string>
+    <string name="ready_headline">%1$s will be put back in order</string>
+    <string name="stat_found">Photos and videos found</string>
+    <string name="stat_to_resave">To re-save</string>
+    <string name="date_sources_title">How dates were found</string>
+    <string name="source_capture">Capture info %1$d%%</string>
+    <string name="source_file_name">File name %1$d%%</string>
+    <string name="source_file_time">File time %1$d%%</string>
+    <string name="space_needed">Space needed</string>
+    <string name="space_hint">Uses %2$d%% of the %1$s free</string>
+    <string name="working_title">Stacking your photos in order</string>
+    <string name="working_period">Saving photos from %1$s</string>
+    <string name="working_period_pattern">MMMM yyyy</string>
+    <string name="finished_title">Your memories are\nback in place</string>
+    <string name="finished_body">Re-saved %1$d items in the order they were taken. Every app now shows your newest photos on top.</string>
+    <string name="stat_resaved">Re-saved</string>
+    <string name="stat_failed">Failed</string>
 </resources>

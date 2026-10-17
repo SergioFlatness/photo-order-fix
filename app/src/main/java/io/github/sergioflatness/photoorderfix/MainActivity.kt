@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.text.format.Formatter
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -27,7 +26,6 @@ import androidx.compose.material3.Card
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -174,24 +172,9 @@ private fun App(viewModel: MainViewModel) {
                     },
                 )
 
-                is UiState.Working -> {
-                    Text(stringResource(R.string.working, s.done, s.total))
-                    LinearProgressIndicator(
-                        progress = { if (s.total == 0) 0f else s.done.toFloat() / s.total },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Text(stringResource(R.string.working_hint), style = MaterialTheme.typography.bodySmall)
-                }
+                is UiState.Working -> WorkingScreen(s.done, s.total, s.currentMs)
 
-                is UiState.Finished -> {
-                    Text(
-                        if (s.cancelled) stringResource(R.string.finished_cancelled, s.moved)
-                        else stringResource(R.string.finished_ok, s.moved)
-                    )
-                    if (s.failed > 0) Text(stringResource(R.string.finished_failed, s.failed))
-                    Text(stringResource(R.string.finished_hint), style = MaterialTheme.typography.bodySmall)
-                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
-                }
+                is UiState.Finished -> FinishedScreen(s.moved, s.failed, s.cancelled, onDone = viewModel::restart)
 
                 is UiState.DatesRepaired -> {
                     Text(stringResource(R.string.dates_repaired, s.fixed))
@@ -257,14 +240,12 @@ private fun ReadyScreen(
     onPickForDate: () -> Unit,
     onManageMedia: () -> Unit,
 ) {
-    val context = LocalContext.current
     if (summary.partialAccess) {
         Card(colors = cardColors(), elevation = cardElevation()) { Text(stringResource(R.string.partial_access), Modifier.padding(16.dp)) }
     }
-    Card(colors = cardColors(), elevation = cardElevation()) {
+    SummaryCard(summary)
+    if (summary.duplicateGroups > 0 || summary.skipped > 0) Card(colors = cardColors(), elevation = cardElevation()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(stringResource(R.string.summary_total, summary.totalItems))
-            Text(stringResource(R.string.summary_dates, summary.fromCaptureDate, summary.fromFileName, summary.fromModifiedTime))
             if (summary.duplicateGroups > 0) {
                 Text(stringResource(R.string.summary_duplicates, summary.duplicateGroups))
                 summary.duplicateExamples.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
@@ -300,24 +281,14 @@ private fun ReadyScreen(
         }
     }
 
-    if (summary.toResave == 0) {
-        Text(stringResource(R.string.nothing_to_do), fontWeight = FontWeight.Bold)
-        return
-    }
+    // SummaryCard already says there is nothing to do.
+    if (summary.toResave == 0) return
 
-    Text(
-        stringResource(
-            R.string.summary_resave,
-            summary.toResave,
-            Formatter.formatShortFileSize(context, summary.resaveBytes),
-            Formatter.formatShortFileSize(context, summary.freeBytes),
-        ),
-        fontWeight = FontWeight.Bold,
-    )
+    StorageCard(summary.resaveBytes, summary.freeBytes)
     if (summary.movedToNewFolder > 0) {
         Text(stringResource(R.string.summary_moved, summary.movedToNewFolder))
     }
-    Card(colors = cardColors(), elevation = cardElevation()) { Text(stringResource(R.string.cloud_warning), Modifier.padding(16.dp)) }
+    Notice(stringResource(R.string.cloud_warning))
     Text(stringResource(R.string.how_it_works), style = MaterialTheme.typography.bodySmall)
     Text(stringResource(R.string.caveats), style = MaterialTheme.typography.bodySmall)
 

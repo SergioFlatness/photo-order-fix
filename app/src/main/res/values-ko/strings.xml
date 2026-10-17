@@ -52,4 +52,21 @@
     <string name="action_cancel">취소</string>
     <string name="dates_set">사진 %1$d장의 날짜를 바꿨어요.</string>
     <string name="dates_set_failed">%1$d장은 바꾸지 못했어요. 마지막 검사에서 앱이 찾은 사진만 바꿀 수 있어요.</string>
+    <string name="ready_headline_total">%1$s개 중</string>
+    <string name="ready_headline">%1$s개의 순서를 고칠게요</string>
+    <string name="stat_found">찾은 사진·동영상</string>
+    <string name="stat_to_resave">다시 저장할 것</string>
+    <string name="date_sources_title">날짜를 찾은 방법</string>
+    <string name="source_capture">촬영 정보 %1$d%%</string>
+    <string name="source_file_name">파일 이름 %1$d%%</string>
+    <string name="source_file_time">파일 시간 %1$d%%</string>
+    <string name="space_needed">필요한 공간</string>
+    <string name="space_hint">남은 저장공간 %1$s 중 %2$d%%를 써요</string>
+    <string name="working_title">사진을 순서대로 쌓는 중이에요</string>
+    <string name="working_period">%1$s 사진을 저장하고 있어요</string>
+    <string name="working_period_pattern">yyyy년 M월</string>
+    <string name="finished_title">추억이 제자리로\n돌아왔어요</string>
+    <string name="finished_body">%1$d개를 찍은 순서대로 다시 저장했어요. 이제 어떤 앱에서든 최신 사진이 맨 위에 보여요.</string>
+    <string name="stat_resaved">다시 저장</string>
+    <string name="stat_failed">실패</string>
 </resources>
