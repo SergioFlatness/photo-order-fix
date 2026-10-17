@@ -6,15 +6,15 @@ plugins {
 
 android {
     namespace = "io.github.sergioflatness.photoorderfix"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.sergioflatness.photoorderfix"
         // Android 11: first version with one-tap bulk delete consent (MediaStore.createDeleteRequest).
         minSdk = 30
-        targetSdk = 35
-        versionCode = 13
-        versionName = "0.5.3"
+        targetSdk = 36
+        versionCode = 14
+        versionName = "0.6.0"
     }
 
     signingConfigs {
