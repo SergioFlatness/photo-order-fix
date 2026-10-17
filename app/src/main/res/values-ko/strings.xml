@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">사진 순서 고치기</string>
-    <string name="intro_body">아이폰에서 안드로이드로 옮긴 뒤 인스타그램, 카카오톡 같은 앱에서 사진 순서가 뒤집히거나 뒤죽박죽인가요?\n\n이런 앱들은 사진을 찍은 날짜가 아니라 폰에 들어온 순서로 정렬해요. 한꺼번에 옮기면 모든 사진이 동시에, 그것도 최신 사진부터 들어오는 경우가 많아서 순서가 꼬여요.\n\n이 앱은 사진마다 진짜 찍은 날짜를 찾아서, 사진과 동영상을 오래된 것부터 다시 저장해요. 그러면 어떤 앱에서든 최신 사진이 맨 위에 보여요. 모든 작업은 폰 안에서만 이뤄지고, 아무것도 업로드하지 않아요.</string>
+    <string name="intro_headline">추억이 찍은 순서대로\n다시 쌓여요</string>
+    <string name="intro_body">아이폰에서 옮긴 사진이 인스타그램이나 카카오톡에서 거꾸로 보이나요? 이런 앱들은 찍은 날짜가 아니라 폰에 들어온 순서로 정렬해요. 이 앱이 찍은 날짜를 찾아 오래된 것부터 다시 저장해 드려요.</string>
+    <string name="intro_step1">사진마다 진짜 찍은 날짜 찾기</string>
+    <string name="intro_step2">오래된 것부터 다시 저장하기</string>
+    <string name="intro_step3">모든 앱에서 최신 사진이 맨 위로</string>
+    <string name="intro_privacy">모든 작업은 휴대폰 안에서만 해요. 아무것도 업로드하지 않아요.</string>
     <string name="action_scan">내 사진 확인하기</string>
     <string name="scanning">사진과 동영상의 날짜를 읽는 중…</string>
     <string name="partial_access">일부 사진만 허용하셨어요. 전체를 고치려면 설정에서 사진과 동영상을 \"모두 허용\"으로 바꾼 뒤 다시 확인해 주세요.</string>
