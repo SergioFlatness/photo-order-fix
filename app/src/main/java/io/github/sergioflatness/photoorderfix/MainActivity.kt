@@ -23,8 +23,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -32,9 +33,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,7 +56,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) {
+            AppTheme {
                 App(viewModel)
             }
         }
@@ -134,7 +132,7 @@ private fun App(viewModel: MainViewModel) {
         onPauseOrDispose { }
     }
 
-    Scaffold { padding ->
+    Scaffold(containerColor = Color.Transparent, modifier = Modifier.background(backgroundBrush())) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -143,18 +141,12 @@ private fun App(viewModel: MainViewModel) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            // Shown so testers can tell which build they installed.
+            // Version is shown so testers can tell which build they installed.
             val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
-            if (version != null) Text("v$version", style = MaterialTheme.typography.bodySmall)
+            Header(version)
 
             when (val s = state) {
-                UiState.Intro -> {
-                    Text(stringResource(R.string.intro_body))
-                    Button(onClick = { permissionLauncher.launch(mediaPermissions()) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.action_scan))
-                    }
-                }
+                UiState.Intro -> IntroScreen(onScan = { permissionLauncher.launch(mediaPermissions()) })
 
                 UiState.Scanning -> {
                     CircularProgressIndicator()
@@ -193,14 +185,14 @@ private fun App(viewModel: MainViewModel) {
                     )
                     if (s.failed > 0) Text(stringResource(R.string.finished_failed, s.failed))
                     Text(stringResource(R.string.finished_hint), style = MaterialTheme.typography.bodySmall)
-                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
                 }
 
                 is UiState.DatesRepaired -> {
                     Text(stringResource(R.string.dates_repaired, s.fixed))
                     if (s.failed > 0) Text(stringResource(R.string.dates_repair_failed, s.failed))
                     Text(stringResource(R.string.dates_repaired_hint), style = MaterialTheme.typography.bodySmall)
-                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
                 }
 
                 is UiState.TakeoutImported -> {
@@ -211,7 +203,7 @@ private fun App(viewModel: MainViewModel) {
                         style = MaterialTheme.typography.bodySmall,
                     )
                     if (s.fixed > 0) Text(stringResource(R.string.takeout_next))
-                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
                 }
 
                 is UiState.PickDate -> {
@@ -228,22 +220,20 @@ private fun App(viewModel: MainViewModel) {
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Button(onClick = { invalid = !viewModel.applyPickedDate(text) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.action_apply_date))
-                    }
-                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_cancel)) }
+                    GradientButton(stringResource(R.string.action_apply_date), onClick = { invalid = !viewModel.applyPickedDate(text) })
+                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_cancel)) }
                 }
 
                 is UiState.DatesSet -> {
                     Text(stringResource(R.string.dates_set, s.fixed), fontWeight = FontWeight.Bold)
                     if (s.failed > 0) Text(stringResource(R.string.dates_set_failed, s.failed))
                     if (s.fixed > 0) Text(stringResource(R.string.takeout_next))
-                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
                 }
 
                 is UiState.Failed -> {
                     Text(stringResource(R.string.error, s.message))
-                    OutlinedButton(onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
                 }
             }
         }
@@ -264,9 +254,9 @@ private fun ReadyScreen(
 ) {
     val context = LocalContext.current
     if (summary.partialAccess) {
-        Card { Text(stringResource(R.string.partial_access), Modifier.padding(16.dp)) }
+        Card(colors = cardColors(), elevation = cardElevation()) { Text(stringResource(R.string.partial_access), Modifier.padding(16.dp)) }
     }
-    Card {
+    Card(colors = cardColors(), elevation = cardElevation()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.summary_total, summary.totalItems))
             Text(stringResource(R.string.summary_dates, summary.fromCaptureDate, summary.fromFileName, summary.fromModifiedTime))
@@ -284,24 +274,22 @@ private fun ReadyScreen(
     }
 
     if (summary.datesToRepair > 0) {
-        Card {
+        Card(colors = cardColors(), elevation = cardElevation()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.dates_to_repair, summary.datesToRepair))
-                Button(onClick = onRepairDates, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.action_repair_dates, summary.datesToRepair))
-                }
+                GradientButton(stringResource(R.string.action_repair_dates, summary.datesToRepair), onClick = onRepairDates)
             }
         }
     }
 
-    Card {
+    Card(colors = cardColors(), elevation = cardElevation()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.takeout_intro), style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(onClick = onImportTakeout, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(shape = outlinedShape, onClick = onImportTakeout, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_import_takeout))
             }
             Text(stringResource(R.string.pick_date_intro), style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(onClick = onPickForDate, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(shape = outlinedShape, onClick = onPickForDate, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_pick_date))
             }
         }
@@ -324,26 +312,22 @@ private fun ReadyScreen(
     if (summary.movedToNewFolder > 0) {
         Text(stringResource(R.string.summary_moved, summary.movedToNewFolder))
     }
-    Card { Text(stringResource(R.string.cloud_warning), Modifier.padding(16.dp)) }
+    Card(colors = cardColors(), elevation = cardElevation()) { Text(stringResource(R.string.cloud_warning), Modifier.padding(16.dp)) }
     Text(stringResource(R.string.how_it_works), style = MaterialTheme.typography.bodySmall)
     Text(stringResource(R.string.caveats), style = MaterialTheme.typography.bodySmall)
 
     if (!hasLocationAccess) {
-        Card {
+        Card(colors = cardColors(), elevation = cardElevation()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.location_needed), fontWeight = FontWeight.Bold)
-                Button(onClick = onRequestLocation, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.action_allow_location))
-                }
+                GradientButton(stringResource(R.string.action_allow_location), onClick = onRequestLocation)
             }
         }
     }
     if (!canManageMedia && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        OutlinedButton(onClick = onManageMedia, modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(shape = outlinedShape, onClick = onManageMedia, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.action_manage_media))
         }
     }
-    Button(onClick = onFix, enabled = hasLocationAccess, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.action_fix, summary.toResave))
-    }
+    GradientButton(stringResource(R.string.action_fix, summary.toResave), onClick = onFix, enabled = hasLocationAccess)
 }

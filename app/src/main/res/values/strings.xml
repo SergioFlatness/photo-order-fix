@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Photo Order Fix</string>
-    <string name="intro_body">Moved from iPhone to Android and now Instagram, KakaoTalk or other apps show your photos in the wrong order?\n\nThose apps sort by when a file arrived on the phone, not when it was taken. A bulk transfer makes every photo arrive at once, often newest first, so the order comes out reversed or jumbled.\n\nThis app finds each photo\'s real date and re-saves your photos and videos oldest first, so every app shows them newest on top again. Everything happens on your phone. Nothing is uploaded.</string>
+    <string name="intro_headline">Your memories, back in\nthe order you took them</string>
+    <string name="intro_body">Photos moved from your iPhone showing up backwards in Instagram or KakaoTalk? Those apps sort by when a file arrived on the phone, not when it was taken. This app finds each photo\'s real date and re-saves them oldest first.</string>
+    <string name="intro_step1">Find the real date of every photo</string>
+    <string name="intro_step2">Re-save them oldest first</string>
+    <string name="intro_step3">Newest on top in every app</string>
+    <string name="intro_privacy">Everything happens on your phone. Nothing is uploaded.</string>
     <string name="action_scan">Check my photos</string>
     <string name="scanning">Reading dates of your photos and videos…</string>
     <string name="partial_access">You only shared some photos. To fix the whole library, allow access to all photos and videos in Settings, then check again.</string>
