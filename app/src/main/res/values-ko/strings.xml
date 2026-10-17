@@ -69,4 +69,17 @@
     <string name="finished_body">%1$d개를 찍은 순서대로 다시 저장했어요. 이제 어떤 앱에서든 최신 사진이 맨 위에 보여요.</string>
     <string name="stat_resaved">다시 저장</string>
     <string name="stat_failed">실패</string>
+    <string name="keep_originals">원본 30일 보관 (되돌리기 가능)</string>
+    <string name="keep_originals_on">원본을 지우지 않고 휴대폰 휴지통에 30일 동안 둬요. 그동안 저장공간을 %1$s 더 써요.</string>
+    <string name="keep_originals_off">원본을 바로 지워요. 공간은 바로 비지만, 고친 뒤 되돌릴 수 없어요.</string>
+    <string name="keep_originals_no_room">저장공간이 모자라서 원본을 바로 지워요. 이번에는 되돌릴 수 없어요.</string>
+    <string name="finished_kept">원본은 30일 동안 휴지통에 보관돼요. 그동안은 처음 화면에서 언제든 되돌릴 수 있어요.</string>
+    <string name="undo_available">지난번에 고친 %1$s개를 되돌릴 수 있어요 (%2$d일 남음)</string>
+    <string name="undo_hint">앱이 만든 사본을 지우고, 휴지통에 있는 원본을 꺼내 예전 그대로 돌려놔요.</string>
+    <string name="action_undo">되돌리기</string>
+    <string name="undo_done">되돌렸어요. %1$s개가 원래대로 돌아왔어요.</string>
+    <string name="undo_done_hint">이제 사진이 고치기 전과 똑같은 상태예요. 원하면 언제든 다시 고칠 수 있어요.</string>
+    <string name="undo_missing">%1$s개는 휴지통에서 찾지 못해서 되돌리지 못했어요. 이미 비워졌을 수 있어요.</string>
+    <string name="undo_cancelled">되돌리기를 멈췄어요. 원본은 아직 휴지통에 있으니, 처음 화면에서 다시 이어서 할 수 있어요.</string>
+    <string name="working_undo_title">사진을 예전 상태로 되돌리는 중이에요</string>
 </resources>

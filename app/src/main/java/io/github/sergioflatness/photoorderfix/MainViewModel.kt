@@ -6,6 +6,7 @@ import android.content.IntentSender
 import android.content.ContentUris
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.StatFs
 import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
@@ -16,6 +17,7 @@ import io.github.sergioflatness.photoorderfix.core.ReorderPlan
 import io.github.sergioflatness.photoorderfix.core.ReorderPlanner
 import io.github.sergioflatness.photoorderfix.core.TakeoutDates
 import io.github.sergioflatness.photoorderfix.core.TargetFolder
+import io.github.sergioflatness.photoorderfix.core.UndoLog
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -48,6 +51,8 @@ data class ScanSummary(
     val fromModifiedTime: Int,
     val freeBytes: Long,
     val partialAccess: Boolean,
+    /** Room for the copies while the originals wait in the trash, so the fix can be undone. */
+    val canKeepOriginals: Boolean,
 )
 
 sealed interface UiState {
@@ -55,8 +60,10 @@ sealed interface UiState {
     data object Scanning : UiState
     data class Ready(val summary: ScanSummary) : UiState
     /** [currentMs] is the date of the item being re-saved, to show which period the work has reached. */
-    data class Working(val done: Int, val total: Int, val currentMs: Long? = null) : UiState
-    data class Finished(val moved: Int, val failed: Int, val cancelled: Boolean) : UiState
+    data class Working(val done: Int, val total: Int, val currentMs: Long? = null, val undoing: Boolean = false) : UiState
+    data class Finished(val moved: Int, val failed: Int, val cancelled: Boolean, val keptOriginals: Boolean = false) : UiState
+    /** [missing] originals were no longer in the trash; [cancelled] means the user declined restoring. */
+    data class Undone(val restored: Int, val missing: Int, val cancelled: Boolean) : UiState
     data class DatesRepaired(val fixed: Int, val failed: Int) : UiState
     data class TakeoutImported(
         val found: Int,
@@ -94,6 +101,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var picked: List<PlanItem<DeviceMedia>> = emptyList()
     private var pendingConsent: CompletableDeferred<Boolean>? = null
 
+    private val undoFile = File(app.filesDir, UNDO_FILE)
+    private val _undo = MutableStateFlow(loadUndo())
+    /** The last fix, while its originals are still in Android's trash. */
+    val undo: StateFlow<UndoLog?> = _undo.asStateFlow()
+
+    /** Send originals to the trash instead of deleting them, so the fix can be undone for 30 days. */
+    private val _keepOriginals = MutableStateFlow(true)
+    val keepOriginals: StateFlow<Boolean> = _keepOriginals.asStateFlow()
+    private var canKeepOriginals = false
+
+    fun setKeepOriginals(keep: Boolean) {
+        _keepOriginals.value = keep && canKeepOriginals
+    }
+
     fun refreshManageMedia() {
         _canManageMedia.value = checkManageMedia()
     }
@@ -107,6 +128,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 plan = newPlan
                 scanned = items
                 repairs = items.filter { needsDateRepair(it) }
+                val free = freeBytes()
+                canKeepOriginals = newPlan.resaveBytes + KEEP_RESERVE_BYTES <= free
+                _keepOriginals.value = canKeepOriginals
                 val duplicates = items
                     .groupBy { (it.payload.dataPath ?: "${it.payload.relativePath}${it.payload.name}").lowercase() }
                     .values
@@ -131,8 +155,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         fromCaptureDate = newPlan.countBySource(DateSource.TAKEN),
                         fromFileName = newPlan.countBySource(DateSource.FILENAME),
                         fromModifiedTime = newPlan.countBySource(DateSource.MODIFIED),
-                        freeBytes = freeBytes(),
+                        freeBytes = free,
                         partialAccess = partialAccess,
+                        canKeepOriginals = canKeepOriginals,
                     )
                 )
             } catch (e: Exception) {
@@ -144,9 +169,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun fix() {
         val work = plan?.toResave ?: return
         if (work.isEmpty()) return
+        val keep = _keepOriginals.value && canKeepOriginals
         viewModelScope.launch {
-            // Each batch needs room for its copies until the originals are deleted.
-            val maxBytes = maxOf(freeBytes() / 2, MIN_BATCH_BYTES)
+            // A new fix replaces whatever the last one could undo.
+            var log = UndoLog(System.currentTimeMillis(), emptyList())
+            saveUndo(if (keep) log else null)
+            // Each batch needs room for its copies until the originals are deleted. Trashed
+            // originals free nothing, so then the scan already checked that everything fits.
+            val maxBytes = if (keep) Long.MAX_VALUE else maxOf(freeBytes() / 2, MIN_BATCH_BYTES)
             val batches = ReorderPlanner.batches(work, maxBytes, MAX_BATCH_COUNT)
             var done = 0
             var moved = 0
@@ -165,18 +195,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 if (copies.isEmpty()) continue
 
-                val request = MediaStore.createDeleteRequest(resolver, copies.map { it.first.uri })
+                val originals = copies.map { it.first.uri }
+                val request = if (keep) MediaStore.createTrashRequest(resolver, originals, true)
+                else MediaStore.createDeleteRequest(resolver, originals)
                 if (!askConsent(request.intentSender)) {
                     // Declined: remove this batch's copies so nothing is duplicated.
                     withContext(Dispatchers.IO) { copies.forEach { resaver.discard(it.second) } }
-                    _state.value = UiState.Finished(moved, failed, cancelled = true)
+                    _state.value = UiState.Finished(moved, failed, cancelled = true, keptOriginals = keep && moved > 0)
                     return@launch
                 }
+                // Trashing renames the original on disk, so its name is free for the copy either way.
                 withContext(Dispatchers.IO) { copies.forEach { (original, copy) -> resaver.restoreName(copy, original.name) } }
                 moved += copies.size
+                if (keep) {
+                    log = log.plus(copies.map { (original, copy) -> original.uri.toString() to copy.toString() })
+                    saveUndo(log)
+                }
             }
             plan = null
-            _state.value = UiState.Finished(moved, failed, cancelled = false)
+            _state.value = UiState.Finished(moved, failed, cancelled = false, keptOriginals = keep)
         }
     }
 
@@ -319,6 +356,58 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         pendingConsent = null
     }
 
+    /** Deletes the copies from the last fix and takes the originals back out of the trash. */
+    fun undo() {
+        val log = _undo.value ?: return
+        viewModelScope.launch {
+            val total = log.pairs.size
+            _state.value = UiState.Working(0, total, undoing = true)
+            val originals = withContext(Dispatchers.IO) {
+                // Copies go first: they carry the originals' names, which the restored files need back.
+                log.pairs.forEachIndexed { i, (_, copy) ->
+                    resaver.discard(Uri.parse(copy))
+                    _state.value = UiState.Working(i + 1, total, undoing = true)
+                }
+                log.pairs.map { Uri.parse(it.first) }.filter { isStillTrashed(it) }
+            }
+            var restored = 0
+            for (chunk in originals.chunked(MAX_BATCH_COUNT)) {
+                val request = MediaStore.createTrashRequest(resolver, chunk, false)
+                if (!askConsent(request.intentSender)) {
+                    // Keep the log: the originals are safe in the trash and the user can try again.
+                    _state.value = UiState.Undone(restored, total - originals.size, cancelled = true)
+                    return@launch
+                }
+                restored += chunk.size
+            }
+            saveUndo(null)
+            _state.value = UiState.Undone(restored, total - originals.size, cancelled = false)
+        }
+    }
+
+    private fun isStillTrashed(uri: Uri): Boolean {
+        val args = Bundle().apply { putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_INCLUDE) }
+        return runCatching {
+            resolver.query(uri, arrayOf(MediaStore.MediaColumns.IS_TRASHED), args, null)?.use { c ->
+                c.moveToFirst() && c.getInt(0) == 1
+            } ?: false
+        }.getOrDefault(true) // Without read access, let Android's own request decide.
+    }
+
+    private fun loadUndo(): UndoLog? {
+        val log = runCatching { UndoLog.parse(undoFile.readText()) }.getOrNull() ?: return null
+        if (log.pairs.isEmpty() || log.isExpired(System.currentTimeMillis())) {
+            undoFile.delete()
+            return null
+        }
+        return log
+    }
+
+    private fun saveUndo(log: UndoLog?) {
+        if (log == null) undoFile.delete() else runCatching { undoFile.writeText(log.serialize()) }
+        _undo.value = log?.takeIf { it.pairs.isNotEmpty() }
+    }
+
     fun restart() {
         plan = null
         _state.value = UiState.Intro
@@ -369,5 +458,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val MAX_DUPLICATE_EXAMPLES = 3
         const val MAX_PICKED_NAMES = 5
         const val ONE_DAY_MS = 24L * 60 * 60 * 1000
+        const val UNDO_FILE = "undo.txt"
+        /** Left free beyond the copies when originals stay in the trash. */
+        const val KEEP_RESERVE_BYTES = 1024L * 1024 * 1024
     }
 }

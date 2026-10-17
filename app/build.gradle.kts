@@ -13,8 +13,8 @@ android {
         // Android 11: first version with one-tap bulk delete consent (MediaStore.createDeleteRequest).
         minSdk = 30
         targetSdk = 36
-        versionCode = 17
-        versionName = "0.8.0"
+        versionCode = 18
+        versionName = "0.9.0"
     }
 
     signingConfigs {
