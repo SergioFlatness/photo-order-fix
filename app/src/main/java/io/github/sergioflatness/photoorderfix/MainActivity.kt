@@ -16,6 +16,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -155,94 +165,119 @@ private fun App(viewModel: MainViewModel) {
             val canOpenInfo = !showInfo && state !is UiState.Working && state !is UiState.Scanning
             Header(version, onInfo = if (canOpenInfo) ({ showInfo = true }) else null)
 
-            if (showInfo) {
-                InfoScreen(version, onBack = { showInfo = false })
-            } else when (val s = state) {
-                UiState.Intro -> {
-                    undo?.let { UndoCard(it, onUndo = viewModel::undo) }
-                    IntroScreen(onScan = { permissionLauncher.launch(mediaPermissions()) })
-                }
+            AnimatedContent(
+                targetState = Screen(showInfo, state),
+                // Progress updates keep the same key, so only a real change of screen animates.
+                contentKey = { if (it.info) "info" else it.state::class },
+                transitionSpec = { screenTransition(back = targetState.isBack(initialState)) },
+                label = "screen",
+            ) { screen ->
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    if (screen.info) {
+                        InfoScreen(version, onBack = { showInfo = false })
+                    } else when (val s = screen.state) {
+                        UiState.Intro -> {
+                            undo?.let { UndoCard(it, onUndo = viewModel::undo) }
+                            IntroScreen(onScan = { permissionLauncher.launch(mediaPermissions()) })
+                        }
 
-                UiState.Scanning -> {
-                    CircularProgressIndicator()
-                    Text(stringResource(R.string.scanning))
-                }
+                        UiState.Scanning -> {
+                            CircularProgressIndicator()
+                            Text(stringResource(R.string.scanning))
+                        }
 
-                is UiState.Ready -> ReadyScreen(
-                    summary = s.summary,
-                    onBack = viewModel::restart,
-                    keepOriginals = keepOriginals,
-                    onKeepOriginals = viewModel::setKeepOriginals,
-                    canManageMedia = canManageMedia,
-                    hasLocationAccess = hasLocationAccess,
-                    onRequestLocation = { locationLauncher.launch(Manifest.permission.ACCESS_MEDIA_LOCATION) },
-                    onFix = viewModel::fix,
-                    onRepairDates = viewModel::repairDates,
-                    onPickForDate = { pickLauncher.launch(arrayOf("image/*", "video/*")) },
-                    onImportTakeout = { takeoutLauncher.launch(arrayOf("*/*")) },
-                    onManageMedia = {
-                        context.startActivity(
-                            Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA, Uri.parse("package:${context.packageName}"))
+                        is UiState.Ready -> ReadyScreen(
+                            summary = s.summary,
+                            onBack = viewModel::restart,
+                            keepOriginals = keepOriginals,
+                            onKeepOriginals = viewModel::setKeepOriginals,
+                            canManageMedia = canManageMedia,
+                            hasLocationAccess = hasLocationAccess,
+                            onRequestLocation = { locationLauncher.launch(Manifest.permission.ACCESS_MEDIA_LOCATION) },
+                            onFix = viewModel::fix,
+                            onRepairDates = viewModel::repairDates,
+                            onPickForDate = { pickLauncher.launch(arrayOf("image/*", "video/*")) },
+                            onImportTakeout = { takeoutLauncher.launch(arrayOf("*/*")) },
+                            onManageMedia = {
+                                context.startActivity(
+                                    Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA, Uri.parse("package:${context.packageName}"))
+                                )
+                            },
                         )
-                    },
-                )
 
-                is UiState.Working -> WorkingScreen(s.done, s.total, s.currentMs, s.undoing)
+                        is UiState.Working -> WorkingScreen(s.done, s.total, s.currentMs, s.undoing)
 
-                is UiState.Finished -> FinishedScreen(s.moved, s.failed, s.cancelled, s.keptOriginals, onDone = viewModel::restart)
+                        is UiState.Finished -> FinishedScreen(s.moved, s.failed, s.cancelled, s.keptOriginals, onDone = viewModel::restart)
 
-                is UiState.Undone -> UndoneScreen(s.restored, s.missing, s.cancelled, onDone = viewModel::restart)
+                        is UiState.Undone -> UndoneScreen(s.restored, s.missing, s.cancelled, onDone = viewModel::restart)
 
-                is UiState.DatesRepaired -> {
-                    Text(stringResource(R.string.dates_repaired, s.fixed))
-                    if (s.failed > 0) Text(stringResource(R.string.dates_repair_failed, s.failed))
-                    Text(stringResource(R.string.dates_repaired_hint), style = MaterialTheme.typography.bodySmall)
-                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
-                }
+                        is UiState.DatesRepaired -> {
+                            Text(stringResource(R.string.dates_repaired, s.fixed))
+                            if (s.failed > 0) Text(stringResource(R.string.dates_repair_failed, s.failed))
+                            Text(stringResource(R.string.dates_repaired_hint), style = MaterialTheme.typography.bodySmall)
+                            OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                        }
 
-                is UiState.TakeoutImported -> {
-                    Text(stringResource(R.string.takeout_result, s.found, s.fixed), fontWeight = FontWeight.Bold)
-                    if (s.failed > 0) Text(stringResource(R.string.takeout_failed, s.failed))
-                    Text(
-                        stringResource(R.string.takeout_skipped, s.alreadyEarlier, s.ambiguous, s.notOnPhone),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    if (s.fixed > 0) Text(stringResource(R.string.takeout_next))
-                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
-                }
+                        is UiState.TakeoutImported -> {
+                            Text(stringResource(R.string.takeout_result, s.found, s.fixed), fontWeight = FontWeight.Bold)
+                            if (s.failed > 0) Text(stringResource(R.string.takeout_failed, s.failed))
+                            Text(
+                                stringResource(R.string.takeout_skipped, s.alreadyEarlier, s.ambiguous, s.notOnPhone),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            if (s.fixed > 0) Text(stringResource(R.string.takeout_next))
+                            OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                        }
 
-                is UiState.PickDate -> {
-                    var text by remember(s) { mutableStateOf(s.initial) }
-                    var invalid by remember(s) { mutableStateOf(false) }
-                    Text(stringResource(R.string.pick_date_title, s.count), fontWeight = FontWeight.Bold)
-                    s.names.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
-                    OutlinedTextField(
-                        value = text,
-                        onValueChange = { text = it; invalid = false },
-                        label = { Text(stringResource(R.string.pick_date_label)) },
-                        isError = invalid,
-                        supportingText = { Text(stringResource(R.string.pick_date_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    GradientButton(stringResource(R.string.action_apply_date), onClick = { invalid = !viewModel.applyPickedDate(text) })
-                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_cancel)) }
-                }
+                        is UiState.PickDate -> {
+                            var text by remember(s) { mutableStateOf(s.initial) }
+                            var invalid by remember(s) { mutableStateOf(false) }
+                            Text(stringResource(R.string.pick_date_title, s.count), fontWeight = FontWeight.Bold)
+                            s.names.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                            OutlinedTextField(
+                                value = text,
+                                onValueChange = { text = it; invalid = false },
+                                label = { Text(stringResource(R.string.pick_date_label)) },
+                                isError = invalid,
+                                supportingText = { Text(stringResource(R.string.pick_date_hint)) },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            GradientButton(stringResource(R.string.action_apply_date), onClick = { invalid = !viewModel.applyPickedDate(text) })
+                            OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_cancel)) }
+                        }
 
-                is UiState.DatesSet -> {
-                    Text(stringResource(R.string.dates_set, s.fixed), fontWeight = FontWeight.Bold)
-                    if (s.failed > 0) Text(stringResource(R.string.dates_set_failed, s.failed))
-                    if (s.fixed > 0) Text(stringResource(R.string.takeout_next))
-                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
-                }
+                        is UiState.DatesSet -> {
+                            Text(stringResource(R.string.dates_set, s.fixed), fontWeight = FontWeight.Bold)
+                            if (s.failed > 0) Text(stringResource(R.string.dates_set_failed, s.failed))
+                            if (s.fixed > 0) Text(stringResource(R.string.takeout_next))
+                            OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                        }
 
-                is UiState.Failed -> {
-                    Text(stringResource(R.string.error, s.message))
-                    OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                        is UiState.Failed -> {
+                            Text(stringResource(R.string.error, s.message))
+                            OutlinedButton(shape = outlinedShape, onClick = viewModel::restart) { Text(stringResource(R.string.action_again)) }
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+/** What is on screen: the help screen, or the current step of the fix. */
+private data class Screen(val info: Boolean, val state: UiState) {
+    // Closing help or returning to the start feels like going back, so it slides the other way.
+    fun isBack(from: Screen): Boolean =
+        (from.info && !info) || (!info && state == UiState.Intro && from.state != UiState.Intro)
+}
+
+private fun screenTransition(back: Boolean): ContentTransform {
+    val sign = if (back) -1 else 1
+    val slide = tween<IntOffset>(300)
+    return (fadeIn(tween(300)) + slideInHorizontally(slide) { sign * it / 6 }) togetherWith
+        (fadeOut(tween(200)) + slideOutHorizontally(slide) { -sign * it / 6 }) using
+        SizeTransform(clip = false)
 }
 
 @Composable

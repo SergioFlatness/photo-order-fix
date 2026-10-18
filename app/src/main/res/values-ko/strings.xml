@@ -86,6 +86,8 @@
     <string name="faq_title">자주 묻는 질문</string>
     <string name="faq_why_q">왜 다른 앱에서 사진 순서가 뒤죽박죽인가요?</string>
     <string name="faq_why_a">갤러리는 \"찍은 날짜\"로 줄을 세우지만, 인스타그램 같은 앱은 \"폰에 들어온 시각\"으로, 카카오톡 같은 앱은 \"파일이 바뀐 시각\"으로 줄을 세워요. 사진을 한꺼번에 옮기면 이 시각들이 뒤섞여요. 이 앱은 사진을 찍은 순서대로 다시 저장해서 세 가지 시각을 모두 맞춰요.</string>
+    <string name="faq_how_q">이 앱은 어떻게 작동하나요?</string>
+    <string name="faq_how_a">사진 한 장에는 시각이 세 가지 붙어 있어요. 찍은 날짜, 폰에 들어온 날짜, 파일이 마지막으로 바뀐 날짜예요. 앨범에 비유하면 갤러리는 사진 뒷면에 적힌 촬영 날짜를 보고 정리하지만, 인스타그램은 앨범에 꽂은 순서대로, 카카오톡은 마지막으로 손댄 순서대로 보여 줘요. 사진을 한꺼번에 옮기면 꽂은 순서가 뒤죽박죽이 돼요.\n\n그래서 이 앱은 먼저 사진마다 진짜 찍은 날짜를 찾아요. 사진 속 촬영 정보(EXIF)를 먼저 보고, 없으면 파일 이름, 그래도 없으면 파일 시각을 봐요. 그다음 순서가 어긋난 사진만 가장 오래된 것부터 하나씩 새로 저장해요. 새로 저장한 순서가 곧 앨범에 꽂는 순서가 되니까 어느 앱에서나 찍은 순서대로 보여요. 새 사진의 파일 시각도 찍은 날짜로 맞춰요.\n\n화질은 그대로예요. 파일을 바이트 하나 바꾸지 않고 복사하거든요. 원본을 지우기로 하면 휴지통으로 옮기니까 30일 안에는 되돌릴 수 있어요.</string>
     <string name="faq_quality_q">사진 화질이 떨어지거나 내용이 바뀌나요?</string>
     <string name="faq_quality_a">아니요. 원본과 한 글자도 다르지 않은 똑같은 파일로 복사해요. 위치 정보 같은 사진 정보도 그대로 남아요.</string>
     <string name="faq_originals_q">원본 사진은 어떻게 되나요?</string>
@@ -105,6 +107,7 @@
     <string name="support_email_subject">[사진 순서 고치기 %1$s] 문의</string>
     <string name="support_email_body">여기에 문의 내용을 적어 주세요.\n\n\n---\n%1$s</string>
     <string name="action_email">이메일로 문의하기</string>
+    <string name="action_kakao">카카오톡 오픈채팅으로 물어보기</string>
     <string name="action_report">GitHub에 문제 신고하기</string>
     <string name="about_title">앱 정보</string>
     <string name="about_version">버전</string>
