@@ -26,6 +26,15 @@ jobs:
       - name: Build the app
         run: ./gradlew :app:assembleDebug --console=plain
 
+      # Signs with a throwaway key, so a broken release setup shows up here, not on release day.
+      - name: Check the release bundle builds and signs
+        run: |
+          keytool -genkeypair -keystore "$RUNNER_TEMP/check.jks" -storetype PKCS12 -alias upload \
+            -keyalg RSA -keysize 2048 -validity 1 -storepass checkonly -dname "CN=check"
+          RELEASE_KEYSTORE="$RUNNER_TEMP/check.jks" RELEASE_KEYSTORE_PASSWORD=checkonly \
+            ./gradlew :app:bundleRelease --console=plain
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab | grep -q "jar verified"
+
       - name: Upload the APK
         uses: actions/upload-artifact@v4
         with:
