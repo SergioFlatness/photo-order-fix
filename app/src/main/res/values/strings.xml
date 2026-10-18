@@ -86,6 +86,8 @@
     <string name="faq_title">Frequently asked questions</string>
     <string name="faq_why_q">Why are my photos out of order in other apps?</string>
     <string name="faq_why_a">The Gallery sorts by the date a photo was taken, but apps like Instagram sort by when the file arrived on the phone, and apps like KakaoTalk by when the file last changed. Moving thousands of photos at once scrambles those times. This app re-saves your photos in the order they were taken, so all three line up.</string>
+    <string name="faq_how_q">How does the app work?</string>
+    <string name="faq_how_a">Every photo carries three times: when it was taken, when it arrived on the phone, and when the file last changed. Think of a photo album. The Gallery files each print by the date written on the back, but Instagram shows them in the order they were slipped into the album, and KakaoTalk in the order they were last touched. Moving thousands of photos at once slips them in out of order.\n\nSo the app first finds the real date each photo was taken. It reads the camera info inside the photo (EXIF), then the file name, then the file time. Then it re-saves only the out-of-order photos, oldest first, one by one. The order they are re-saved becomes the order they sit in the album, so every app shows them in the order they were taken. It also sets each new file\'s time to the date it was taken.\n\nQuality stays the same, because the file is copied byte for byte. If you choose to remove the originals, they go to the trash, so you can undo within 30 days.</string>
     <string name="faq_quality_q">Will my photos lose quality or change?</string>
     <string name="faq_quality_a">No. Each copy is byte-for-byte identical to the original, including photo details such as location.</string>
     <string name="faq_originals_q">What happens to the originals?</string>
@@ -105,6 +107,7 @@
     <string name="support_email_subject">[Photo Order Fix %1$s] Question</string>
     <string name="support_email_body">Write your question here.\n\n\n---\n%1$s</string>
     <string name="action_email">Email us</string>
+    <string name="action_kakao">Ask on KakaoTalk open chat</string>
     <string name="action_report">Report a problem on GitHub</string>
     <string name="about_title">About</string>
     <string name="about_version">Version</string>
@@ -114,4 +117,6 @@
     <string name="about_license">Open source under the MIT License.</string>
     <string name="action_back">Back</string>
     <string name="support_email" translatable="false">dohyung1211@gmail.com</string>
+    <!-- KakaoTalk open chat link (https://open.kakao.com/o/...). The button is hidden when this is empty. -->
+    <string name="kakao_openchat_url" translatable="false">https://open.kakao.com/o/su512XSi</string>
 </resources>

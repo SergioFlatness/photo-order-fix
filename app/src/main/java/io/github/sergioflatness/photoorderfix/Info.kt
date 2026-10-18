@@ -68,6 +68,7 @@ fun InfoScreen(version: String?, onBack: () -> Unit) {
     Section(stringResource(R.string.faq_title)) {
         val faqs = listOf(
             R.string.faq_why_q to R.string.faq_why_a,
+            R.string.faq_how_q to R.string.faq_how_a,
             R.string.faq_quality_q to R.string.faq_quality_a,
             R.string.faq_originals_q to R.string.faq_originals_a,
             R.string.faq_space_q to R.string.faq_space_a,
@@ -89,6 +90,12 @@ fun InfoScreen(version: String?, onBack: () -> Unit) {
             val subject = stringResource(R.string.support_email_subject, version ?: "?")
             val body = stringResource(R.string.support_email_body, deviceInfo(version))
             GradientButton(stringResource(R.string.action_email), onClick = { sendEmail(context, email, subject, body) })
+        }
+        val kakao = stringResource(R.string.kakao_openchat_url)
+        if (kakao.isNotBlank()) {
+            OutlinedButton(shape = outlinedShape, modifier = Modifier.fillMaxWidth(), onClick = { open(context, kakao) }) {
+                Text(stringResource(R.string.action_kakao))
+            }
         }
         OutlinedButton(shape = outlinedShape, modifier = Modifier.fillMaxWidth(), onClick = { open(context, ISSUES_URL) }) {
             Text(stringResource(R.string.action_report))
