@@ -43,7 +43,7 @@ If this policy changes, the new version will be published on this page with a ne
 
 ## Contact
 
-Questions or problems: open an issue at
+Questions or problems: email [dohyung1211@gmail.com](mailto:dohyung1211@gmail.com), or open an issue at
 [github.com/SergioFlatness/photo-order-fix/issues](https://github.com/SergioFlatness/photo-order-fix/issues).
 
 ---
@@ -86,4 +86,4 @@ Questions or problems: open an issue at
 
 ## 문의
 
-질문이나 문제는 [github.com/SergioFlatness/photo-order-fix/issues](https://github.com/SergioFlatness/photo-order-fix/issues)에 남겨 주세요.
+질문이나 문제는 [dohyung1211@gmail.com](mailto:dohyung1211@gmail.com)으로 메일을 보내거나 [github.com/SergioFlatness/photo-order-fix/issues](https://github.com/SergioFlatness/photo-order-fix/issues)에 남겨 주세요.
