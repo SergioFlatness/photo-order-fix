@@ -107,6 +107,10 @@ fun InfoScreen(version: String?, onBack: () -> Unit) {
             Text(stringResource(R.string.about_version), Modifier.weight(1f))
             Text(version ?: "?", fontWeight = FontWeight.Bold)
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.about_developer), Modifier.weight(1f))
+            Text(stringResource(R.string.developer_name), fontWeight = FontWeight.Bold)
+        }
         Text(stringResource(R.string.about_body), style = MaterialTheme.typography.bodyMedium)
         LinkRow(stringResource(R.string.about_privacy)) { open(context, PRIVACY_URL) }
         LinkRow(stringResource(R.string.about_source)) { open(context, SOURCE_URL) }
