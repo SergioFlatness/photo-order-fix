@@ -113,5 +113,5 @@
     <string name="about_source">View source code</string>
     <string name="about_license">Open source under the MIT License.</string>
     <string name="action_back">Back</string>
-    <string name="support_email" translatable="false"></string>
+    <string name="support_email" translatable="false">dohyung1211@gmail.com</string>
 </resources>
