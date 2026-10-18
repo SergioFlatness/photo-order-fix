@@ -26,11 +26,22 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        // The upload key for Play Store bundles. It is never committed: the release workflow
+        // writes it from GitHub secrets, so local release builds stay unsigned.
+        System.getenv("RELEASE_KEYSTORE")?.let { path ->
+            create("release") {
+                storeFile = file(path)
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = "upload"
+                keyPassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 
