@@ -24,7 +24,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -275,9 +274,11 @@ private data class Screen(val info: Boolean, val state: UiState) {
 private fun screenTransition(back: Boolean): ContentTransform {
     val sign = if (back) -1 else 1
     val slide = tween<IntOffset>(300)
-    return (fadeIn(tween(300)) + slideInHorizontally(slide) { sign * it / 6 }) togetherWith
-        (fadeOut(tween(200)) + slideOutHorizontally(slide) { -sign * it / 6 }) using
-        SizeTransform(clip = false)
+    return ContentTransform(
+        targetContentEnter = fadeIn(tween(300)) + slideInHorizontally(slide) { sign * it / 6 },
+        initialContentExit = fadeOut(tween(200)) + slideOutHorizontally(slide) { -sign * it / 6 },
+        sizeTransform = SizeTransform(clip = false),
+    )
 }
 
 @Composable
