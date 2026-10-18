@@ -217,11 +217,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Sets the file time of earlier copies back to their real date, so the Gallery shows it. */
+    /** Sets file times back to the real date, so the Gallery and file-time pickers show it in place. */
     fun repairDates() {
-        val work = repairs
-        if (work.isEmpty()) return
+        val all = repairs
+        if (all.isEmpty()) return
         viewModelScope.launch {
+            // Files another app made need the user's OK before we can change them.
+            val notOurs = all.filter { !it.payload.ownedByApp }
+            val allowed = notOurs.chunked(MAX_BATCH_COUNT).all { chunk ->
+                askConsent(MediaStore.createWriteRequest(resolver, chunk.map { it.payload.uri }).intentSender)
+            }
+            val work = if (allowed) all else all.filter { it.payload.ownedByApp }
+            if (work.isEmpty()) {
+                _state.value = UiState.DatesRepaired(0, all.size)
+                return@launch
+            }
             _state.value = UiState.Working(0, work.size)
             var fixed = 0
             val paths = ArrayList<String>()
@@ -240,7 +250,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 MediaScannerConnection.scanFile(getApplication(), paths.toTypedArray(), null, null)
             }
             repairs = emptyList()
-            _state.value = UiState.DatesRepaired(fixed, work.size - fixed)
+            _state.value = UiState.DatesRepaired(fixed, all.size - fixed)
         }
     }
 
@@ -420,9 +430,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return deferred.await()
     }
 
+    /**
+     * KakaoTalk and similar pickers sort by the file time, and the Gallery falls back to it, so a file
+     * time far from the real date (for example after a date edit in the Gallery) puts the photo in the
+     * wrong place even when "date added" is in order. Only the time changes; the file stays as it is.
+     */
     private fun needsDateRepair(item: PlanItem<DeviceMedia>): Boolean {
         val media = item.payload
-        if (!media.ownedByApp || media.hasMediaStoreDate || item.date.source == DateSource.MODIFIED) return false
+        if (media.dataPath == null || item.date.source == DateSource.MODIFIED) return false
         return kotlin.math.abs(media.modifiedSec * 1000 - item.date.epochMs) > ONE_DAY_MS
     }
 

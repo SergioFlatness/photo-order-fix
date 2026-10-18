@@ -29,8 +29,8 @@
     <string name="finished_hint">If an app still shows the old order, close it completely and open it again.</string>
     <string name="action_again">Start over</string>
     <string name="error">Something went wrong: %1$s</string>
-    <string name="dates_to_repair">%1$d items this app re-saved earlier show the wrong date in the Gallery (usually videos showing the day they were re-saved). Their real date was found inside the files.</string>
-    <string name="action_repair_dates">Fix dates (%1$d items)</string>
+    <string name="dates_to_repair">%1$d items have a file time that is far from the day they were taken, for example after a date edit in the Gallery. Apps like KakaoTalk sort by file time, so these show up in the wrong place there. This only sets the time back to the real date; the photos themselves are not changed.</string>
+    <string name="action_repair_dates">Fix file times (%1$d items)</string>
     <string name="dates_repaired">Dates fixed for %1$d items.</string>
     <string name="dates_repair_failed">%1$d items could not be changed.</string>
     <string name="dates_repaired_hint">The Gallery may take a moment to update. If dates still look old, close the Gallery completely and open it again.</string>
