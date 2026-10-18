@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -36,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -148,9 +150,14 @@ private fun App(viewModel: MainViewModel) {
         ) {
             // Version is shown so testers can tell which build they installed.
             val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
-            Header(version)
+            var showInfo by rememberSaveable { mutableStateOf(false) }
+            // No help button while work is running, so the progress stays in view.
+            val canOpenInfo = !showInfo && state !is UiState.Working && state !is UiState.Scanning
+            Header(version, onInfo = if (canOpenInfo) ({ showInfo = true }) else null)
 
-            when (val s = state) {
+            if (showInfo) {
+                InfoScreen(version, onBack = { showInfo = false })
+            } else when (val s = state) {
                 UiState.Intro -> {
                     undo?.let { UndoCard(it, onUndo = viewModel::undo) }
                     IntroScreen(onScan = { permissionLauncher.launch(mediaPermissions()) })
@@ -163,6 +170,7 @@ private fun App(viewModel: MainViewModel) {
 
                 is UiState.Ready -> ReadyScreen(
                     summary = s.summary,
+                    onBack = viewModel::restart,
                     keepOriginals = keepOriginals,
                     onKeepOriginals = viewModel::setKeepOriginals,
                     canManageMedia = canManageMedia,
@@ -240,6 +248,7 @@ private fun App(viewModel: MainViewModel) {
 @Composable
 private fun ReadyScreen(
     summary: ScanSummary,
+    onBack: () -> Unit,
     keepOriginals: Boolean,
     onKeepOriginals: (Boolean) -> Unit,
     canManageMedia: Boolean,
@@ -251,6 +260,8 @@ private fun ReadyScreen(
     onPickForDate: () -> Unit,
     onManageMedia: () -> Unit,
 ) {
+    BackHandler(onBack = onBack)
+    BackLink(onBack)
     if (summary.partialAccess) {
         Card(colors = cardColors(), elevation = cardElevation()) { Text(stringResource(R.string.partial_access), Modifier.padding(16.dp)) }
     }

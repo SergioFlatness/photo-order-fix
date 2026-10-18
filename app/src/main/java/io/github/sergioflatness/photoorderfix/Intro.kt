@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun Header(version: String?) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+fun Header(version: String?, onInfo: (() -> Unit)? = null) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier
                 .size(44.dp)
@@ -42,12 +42,13 @@ fun Header(version: String?) {
             // The launcher foreground has the adaptive-icon safe zone built in, so it can fill the tile.
             Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, Modifier.size(44.dp))
         }
-        Column(Modifier.padding(start = 12.dp)) {
+        Column(Modifier.padding(start = 12.dp).weight(1f)) {
             Text(stringResource(R.string.app_name), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
             if (version != null) {
                 Text("v$version", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        if (onInfo != null) InfoButton(onInfo)
     }
 }
 
