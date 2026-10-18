@@ -82,4 +82,36 @@
     <string name="undo_missing">%1$s items were no longer in the trash and could not be restored. It may have been emptied.</string>
     <string name="undo_cancelled">Undo stopped. The originals are still in the trash, so you can continue from the first screen.</string>
     <string name="working_undo_title">Putting your photos back as they were</string>
+    <string name="info_title">Help and about</string>
+    <string name="faq_title">Frequently asked questions</string>
+    <string name="faq_why_q">Why are my photos out of order in other apps?</string>
+    <string name="faq_why_a">The Gallery sorts by the date a photo was taken, but apps like Instagram sort by when the file arrived on the phone, and apps like KakaoTalk by when the file last changed. Moving thousands of photos at once scrambles those times. This app re-saves your photos in the order they were taken, so all three line up.</string>
+    <string name="faq_quality_q">Will my photos lose quality or change?</string>
+    <string name="faq_quality_a">No. Each copy is byte-for-byte identical to the original, including photo details such as location.</string>
+    <string name="faq_originals_q">What happens to the originals?</string>
+    <string name="faq_originals_a">After copying, Android asks whether the originals may be removed. With \"Keep originals for 30 days\" on, they stay in the trash for 30 days, and you can undo from the first screen until then.</string>
+    <string name="faq_space_q">How much free space do I need?</string>
+    <string name="faq_space_a">About as much as the photos being fixed, for a short while. The scan screen shows the amount, and the work is split into batches when space is tight.</string>
+    <string name="faq_cloud_q">Will Google Photos or other cloud backups get duplicates?</string>
+    <string name="faq_cloud_a">Re-saved copies are identical to the originals, so they are recognised as the same photos. If you still see some twice, turn the Gallery\'s cloud sync off and on again.</string>
+    <string name="faq_still_wrong_q">The app says nothing needs fixing, but an app still shows the wrong order</string>
+    <string name="faq_still_wrong_a">Close that app completely and open it again. If you edited a photo\'s date in the Gallery, its file time may now be today. When the scan offers \"Fix file times\", tap it.</string>
+    <string name="faq_crop_q">Photos I cropped or edited on the iPhone look unedited</string>
+    <string name="faq_crop_a">The iPhone keeps the original and the edits separately, and only the original moves to the new phone. This app cannot bring the edits back. You can download the edited photos from icloud.com instead.</string>
+    <string name="faq_privacy_q">Are my photos sent anywhere?</string>
+    <string name="faq_privacy_a">No. The app has no internet permission at all, so it cannot send your photos anywhere. No ads, no account, no data collection.</string>
+    <string name="support_title">Contact and support</string>
+    <string name="support_body">Tell us if something goes wrong or you would like a feature. Including the app version and your phone model helps us help you faster.</string>
+    <string name="support_email_subject">[Photo Order Fix %1$s] Question</string>
+    <string name="support_email_body">Write your question here.\n\n\n---\n%1$s</string>
+    <string name="action_email">Email us</string>
+    <string name="action_report">Report a problem on GitHub</string>
+    <string name="about_title">About</string>
+    <string name="about_version">Version</string>
+    <string name="about_body">Puts photos moved from an iPhone back in the order they were taken. Everything happens on your phone.</string>
+    <string name="about_privacy">Privacy policy</string>
+    <string name="about_source">View source code</string>
+    <string name="about_license">Open source under the MIT License.</string>
+    <string name="action_back">Back</string>
+    <string name="support_email" translatable="false"></string>
 </resources>
