@@ -111,6 +111,8 @@
     <string name="action_report">Report a problem on GitHub</string>
     <string name="about_title">About</string>
     <string name="about_version">Version</string>
+    <string name="about_developer">Developer</string>
+    <string name="developer_name" translatable="false">P.sergio</string>
     <string name="about_body">Puts photos moved from an iPhone back in the order they were taken. Everything happens on your phone.</string>
     <string name="about_privacy">Privacy policy</string>
     <string name="about_source">View source code</string>

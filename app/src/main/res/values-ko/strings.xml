@@ -111,6 +111,7 @@
     <string name="action_report">GitHub에 문제 신고하기</string>
     <string name="about_title">앱 정보</string>
     <string name="about_version">버전</string>
+    <string name="about_developer">개발자</string>
     <string name="about_body">아이폰에서 옮긴 사진을 찍은 순서대로 다시 정리해 주는 앱이에요. 모든 작업은 휴대폰 안에서만 해요.</string>
     <string name="about_privacy">개인정보처리방침</string>
     <string name="about_source">소스 코드 보기</string>
