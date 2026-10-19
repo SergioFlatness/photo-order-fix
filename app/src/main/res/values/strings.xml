@@ -75,7 +75,7 @@
     <string name="keep_originals_no_room">Not enough free space to keep the originals, so they will be deleted. This fix cannot be undone.</string>
     <string name="finished_kept">The originals stay in the trash for 30 days. Until then you can undo from the first screen.</string>
     <string name="undo_available">You can undo the last fix of %1$s items (%2$d days left)</string>
-    <string name="undo_hint">Deletes the copies this app made and brings the originals back from the trash.</string>
+    <string name="undo_hint">Deletes the copies this app made and brings the originals back from the trash. Please don\'t restore them from the Gallery trash yourself, or every photo will show twice.</string>
     <string name="action_undo">Undo</string>
     <string name="undo_done">Undone. %1$s items are back as they were.</string>
     <string name="undo_done_hint">Your photos are now exactly as before the fix. You can fix them again any time.</string>
@@ -92,6 +92,8 @@
     <string name="faq_quality_a">No. Each copy is byte-for-byte identical to the original, including photo details such as location.</string>
     <string name="faq_originals_q">What happens to the originals?</string>
     <string name="faq_originals_a">After copying, Android asks whether the originals may be removed. With \"Keep originals for 30 days\" on, they stay in the trash for 30 days, and you can undo from the first screen until then.</string>
+    <string name="faq_trash_q">I restored photos from the Gallery trash and now each one shows twice</string>
+    <string name="faq_trash_a">Android cannot change the order of a photo already on the phone, so this app saves a copy and moves the original to the trash. Restoring the original by hand from the trash brings it back next to the copy. To go back, use \"Undo\" on the first screen instead: it removes the copies first, then restores the originals. If it already happened, delete the restored originals again.</string>
     <string name="faq_space_q">How much free space do I need?</string>
     <string name="faq_space_a">About as much as the photos being fixed, for a short while. The scan screen shows the amount, and the work is split into batches when space is tight.</string>
     <string name="faq_cloud_q">Will Google Photos or other cloud backups get duplicates?</string>
