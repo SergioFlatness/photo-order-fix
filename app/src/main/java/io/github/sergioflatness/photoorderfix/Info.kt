@@ -71,6 +71,7 @@ fun InfoScreen(version: String?, onBack: () -> Unit) {
             R.string.faq_how_q to R.string.faq_how_a,
             R.string.faq_quality_q to R.string.faq_quality_a,
             R.string.faq_originals_q to R.string.faq_originals_a,
+            R.string.faq_trash_q to R.string.faq_trash_a,
             R.string.faq_space_q to R.string.faq_space_a,
             R.string.faq_cloud_q to R.string.faq_cloud_a,
             R.string.faq_still_wrong_q to R.string.faq_still_wrong_a,
