@@ -2,6 +2,7 @@ package io.github.sergioflatness.photoorderfix
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -160,6 +161,8 @@ private fun App(viewModel: MainViewModel) {
             // Version is shown so testers can tell which build they installed.
             val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
             var showInfo by rememberSaveable { mutableStateOf(false) }
+            val prefs = remember { context.getSharedPreferences("app", Context.MODE_PRIVATE) }
+            var noticeAccepted by remember { mutableStateOf(prefs.getBoolean(NOTICE_KEY, false)) }
             // No help button while work is running, so the progress stays in view.
             val canOpenInfo = !showInfo && state !is UiState.Working && state !is UiState.Scanning
             Header(version, onInfo = if (canOpenInfo) ({ showInfo = true }) else null)
@@ -175,7 +178,12 @@ private fun App(viewModel: MainViewModel) {
                     if (screen.info) {
                         InfoScreen(version, onBack = { showInfo = false })
                     } else when (val s = screen.state) {
-                        UiState.Intro -> {
+                        UiState.Intro -> if (!noticeAccepted) {
+                            NoticeScreen(onAccept = {
+                                prefs.edit().putBoolean(NOTICE_KEY, true).apply()
+                                noticeAccepted = true
+                            })
+                        } else {
                             undo?.let { UndoCard(it, onUndo = viewModel::undo) }
                             IntroScreen(onScan = { permissionLauncher.launch(mediaPermissions()) })
                         }
@@ -366,3 +374,6 @@ private fun ReadyScreen(
     }
     GradientButton(stringResource(R.string.action_fix, summary.toResave), onClick = onFix, enabled = hasLocationAccess)
 }
+
+/** Set once the user has read the first-run notice. */
+private const val NOTICE_KEY = "notice_accepted"

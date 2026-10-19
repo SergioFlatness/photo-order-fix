@@ -123,4 +123,11 @@
     <string name="support_email" translatable="false">dohyung1211@gmail.com</string>
     <!-- KakaoTalk open chat link (https://open.kakao.com/o/...). The button is hidden when this is empty. -->
     <string name="kakao_openchat_url" translatable="false">https://open.kakao.com/o/su512XSi</string>
+    <string name="notice_title">Before you start</string>
+    <string name="notice_backup">Please back up important photos and videos first (for example with Google Photos backup). Photos can\'t be replaced.</string>
+    <string name="notice_copies">The app re-saves photos as new copies and moves the originals to the trash for 30 days. If anything looks wrong, use Undo on the first screen.</string>
+    <string name="notice_as_is">The app is free and provided as is. It may not work as expected on every phone or for every file.</string>
+    <string name="notice_terms">Read the terms of use</string>
+    <string name="notice_accept">I understand</string>
+    <string name="about_terms">Terms of use</string>
 </resources>

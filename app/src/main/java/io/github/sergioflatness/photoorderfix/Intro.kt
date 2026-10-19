@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -90,6 +92,27 @@ fun IntroScreen(onScan: () -> Unit) {
         textAlign = TextAlign.Center,
     )
     GradientButton(stringResource(R.string.action_scan), onClick = onScan)
+}
+
+/** Shown once, before the first scan: back up first, and the app comes as is. */
+@Composable
+fun NoticeScreen(onAccept: () -> Unit) {
+    val context = LocalContext.current
+    Card(colors = cardColors(), elevation = cardElevation(), shape = RoundedCornerShape(24.dp)) {
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Text(stringResource(R.string.notice_title), fontSize = 22.sp, lineHeight = 30.sp, fontWeight = FontWeight.ExtraBold)
+            listOf(R.string.notice_backup, R.string.notice_copies, R.string.notice_as_is).forEach { line ->
+                Row {
+                    Text("•", Modifier.padding(end = 10.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(line))
+                }
+            }
+        }
+    }
+    OutlinedButton(shape = outlinedShape, modifier = Modifier.fillMaxWidth(), onClick = { open(context, TERMS_URL) }) {
+        Text(stringResource(R.string.notice_terms))
+    }
+    GradientButton(stringResource(R.string.notice_accept), onClick = onAccept)
 }
 
 /** Jumbled stack on the left, sorted stack (newest on top) on the right. */
