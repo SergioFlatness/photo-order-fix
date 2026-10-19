@@ -13,8 +13,8 @@ android {
         // Android 11: first version with one-tap bulk delete consent (MediaStore.createDeleteRequest).
         minSdk = 30
         targetSdk = 36
-        versionCode = 22
-        versionName = "0.11.1"
+        versionCode = 23
+        versionName = "0.11.2"
     }
 
     signingConfigs {
@@ -40,7 +40,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 shrinks and obfuscates the code; Play warns when release code is not optimized.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
         }
     }
