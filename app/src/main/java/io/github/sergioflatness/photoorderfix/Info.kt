@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private const val PRIVACY_URL = "https://sergioflatness.github.io/photo-order-fix/privacy.html"
+const val TERMS_URL = "https://sergioflatness.github.io/photo-order-fix/terms.html"
 private const val ISSUES_URL = "https://github.com/SergioFlatness/photo-order-fix/issues"
 private const val SOURCE_URL = "https://github.com/SergioFlatness/photo-order-fix"
 
@@ -114,6 +115,7 @@ fun InfoScreen(version: String?, onBack: () -> Unit) {
         }
         Text(stringResource(R.string.about_body), style = MaterialTheme.typography.bodyMedium)
         LinkRow(stringResource(R.string.about_privacy)) { open(context, PRIVACY_URL) }
+        LinkRow(stringResource(R.string.about_terms)) { open(context, TERMS_URL) }
         LinkRow(stringResource(R.string.about_source)) { open(context, SOURCE_URL) }
         Text(stringResource(R.string.about_license), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
@@ -174,7 +176,7 @@ private fun deviceInfo(version: String?): String =
     "App ${version ?: "?"} / ${Build.MANUFACTURER} ${Build.MODEL} / Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
 
 // The app has no internet permission; links open in the user's browser or mail app instead.
-private fun open(context: Context, url: String) {
+fun open(context: Context, url: String) {
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
 }
 

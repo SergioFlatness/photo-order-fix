@@ -8,4 +8,5 @@ An Android app that fixes the order of photos moved from an iPhone, so Instagram
 apps show them newest first again.
 
 - [Privacy Policy / 개인정보처리방침](privacy.html)
+- [Terms of Use / 이용약관](terms.html)
 - [Source code and test build](https://github.com/SergioFlatness/photo-order-fix)

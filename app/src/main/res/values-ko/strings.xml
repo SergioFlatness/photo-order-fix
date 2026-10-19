@@ -119,4 +119,11 @@
     <string name="about_source">소스 코드 보기</string>
     <string name="about_license">MIT 라이선스로 공개된 오픈소스 앱이에요.</string>
     <string name="action_back">돌아가기</string>
+    <string name="notice_title">시작하기 전에 꼭 읽어 주세요</string>
+    <string name="notice_backup">중요한 사진과 동영상은 먼저 백업해 주세요(예: 구글 포토 백업). 사진은 다시 만들 수 없어요.</string>
+    <string name="notice_copies">이 앱은 사진을 새 사본으로 다시 저장하고, 원본은 휴지통에 30일 동안 보관해요. 결과가 이상하면 첫 화면의 되돌리기를 써 주세요.</string>
+    <string name="notice_as_is">이 앱은 무료이며 있는 그대로 제공돼요. 모든 휴대폰이나 모든 파일에서 기대한 대로 동작하지 않을 수 있어요.</string>
+    <string name="notice_terms">이용약관 보기</string>
+    <string name="notice_accept">확인했어요</string>
+    <string name="about_terms">이용약관</string>
 </resources>
