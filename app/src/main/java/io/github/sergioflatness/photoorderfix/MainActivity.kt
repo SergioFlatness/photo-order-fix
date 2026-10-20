@@ -334,8 +334,8 @@ private fun ReadyScreen(
         }
     }
 
-    Card(colors = cardColors(), elevation = cardElevation()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FoldCard(stringResource(R.string.more_tools)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.takeout_intro), style = MaterialTheme.typography.bodySmall)
             OutlinedButton(shape = outlinedShape, onClick = onImportTakeout, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_import_takeout))
@@ -355,9 +355,11 @@ private fun ReadyScreen(
         Text(stringResource(R.string.summary_moved, summary.movedToNewFolder))
     }
     KeepOriginalsCard(keepOriginals, summary.canKeepOriginals, summary.resaveBytes, onKeepOriginals)
-    Notice(stringResource(R.string.cloud_warning))
-    Text(stringResource(R.string.how_it_works), style = MaterialTheme.typography.bodySmall)
-    Text(stringResource(R.string.caveats), style = MaterialTheme.typography.bodySmall)
+    FoldCard(stringResource(R.string.more_details)) {
+        listOf(R.string.how_it_works, R.string.cloud_warning, R.string.caveats).forEach {
+            Text(stringResource(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 
     if (!hasLocationAccess) {
         Card(colors = cardColors(), elevation = cardElevation()) {

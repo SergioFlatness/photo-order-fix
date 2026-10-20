@@ -113,7 +113,6 @@ fun InfoScreen(version: String?, onBack: () -> Unit) {
             Text(stringResource(R.string.about_developer), Modifier.weight(1f))
             Text(stringResource(R.string.developer_name), fontWeight = FontWeight.Bold)
         }
-        Text(stringResource(R.string.about_body), style = MaterialTheme.typography.bodyMedium)
         LinkRow(stringResource(R.string.about_privacy)) { open(context, PRIVACY_URL) }
         LinkRow(stringResource(R.string.about_terms)) { open(context, TERMS_URL) }
         LinkRow(stringResource(R.string.about_source)) { open(context, SOURCE_URL) }
@@ -152,6 +151,28 @@ private fun Faq(question: String, answer: String) {
         }
         if (open) {
             Text(answer, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/** A card that shows only its title until tapped, for text most people can skip. */
+@Composable
+fun FoldCard(title: String, content: @Composable () -> Unit) {
+    var open by rememberSaveable(title) { mutableStateOf(false) }
+    Card(colors = cardColors(), elevation = cardElevation()) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button) { open = !open }
+                .animateContentSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(title, Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                Text(if (open) "−" else "+", fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+            }
+            if (open) content()
         }
     }
 }
