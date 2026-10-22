@@ -53,6 +53,8 @@ data class ScanSummary(
     val partialAccess: Boolean,
     /** Room for the copies while the originals wait in the trash, so the fix can be undone. */
     val canKeepOriginals: Boolean,
+    /** Out-of-order items per year taken, oldest year first. */
+    val byYear: List<Pair<Int, Int>> = emptyList(),
 )
 
 sealed interface UiState {
@@ -61,7 +63,14 @@ sealed interface UiState {
     data class Ready(val summary: ScanSummary) : UiState
     /** [currentMs] is the date of the item being re-saved, to show which period the work has reached. */
     data class Working(val done: Int, val total: Int, val currentMs: Long? = null, val undoing: Boolean = false) : UiState
-    data class Finished(val moved: Int, val failed: Int, val cancelled: Boolean, val keptOriginals: Boolean = false) : UiState
+    data class Finished(
+        val moved: Int,
+        val failed: Int,
+        val cancelled: Boolean,
+        val keptOriginals: Boolean = false,
+        /** Years taken of the re-saved items, oldest first. */
+        val years: List<Int> = emptyList(),
+    ) : UiState
     /** [missing] originals were no longer in the trash; [cancelled] means the user declined restoring. */
     data class Undone(val restored: Int, val missing: Int, val cancelled: Boolean) : UiState
     data class DatesRepaired(val fixed: Int, val failed: Int) : UiState
@@ -106,14 +115,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** The last fix, while its originals are still in Android's trash. */
     val undo: StateFlow<UndoLog?> = _undo.asStateFlow()
 
-    /** Send originals to the trash instead of deleting them, so the fix can be undone for 30 days. */
-    private val _keepOriginals = MutableStateFlow(true)
-    val keepOriginals: StateFlow<Boolean> = _keepOriginals.asStateFlow()
+    /**
+     * Originals go to the trash, so the fix can be undone for 30 days. Only when the copies and a
+     * reserve don't fit are they deleted at once.
+     */
     private var canKeepOriginals = false
-
-    fun setKeepOriginals(keep: Boolean) {
-        _keepOriginals.value = keep && canKeepOriginals
-    }
 
     fun refreshManageMedia() {
         _canManageMedia.value = checkManageMedia()
@@ -130,7 +136,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 repairs = items.filter { needsDateRepair(it) }
                 val free = freeBytes()
                 canKeepOriginals = newPlan.resaveBytes + KEEP_RESERVE_BYTES <= free
-                _keepOriginals.value = canKeepOriginals
                 val duplicates = items
                     .groupBy { (it.payload.dataPath ?: "${it.payload.relativePath}${it.payload.name}").lowercase() }
                     .values
@@ -158,6 +163,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         freeBytes = free,
                         partialAccess = partialAccess,
                         canKeepOriginals = canKeepOriginals,
+                        byYear = newPlan.toResave.groupingBy { yearOf(it.date.epochMs) }.eachCount().toSortedMap().map { it.key to it.value },
                     )
                 )
             } catch (e: Exception) {
@@ -169,7 +175,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun fix() {
         val work = plan?.toResave ?: return
         if (work.isEmpty()) return
-        val keep = _keepOriginals.value && canKeepOriginals
+        val keep = canKeepOriginals
+        val years = work.map { yearOf(it.date.epochMs) }.distinct().sorted()
         viewModelScope.launch {
             // A new fix replaces whatever the last one could undo.
             var log = UndoLog(System.currentTimeMillis(), emptyList())
@@ -201,7 +208,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 if (!askConsent(request.intentSender)) {
                     // Declined: remove this batch's copies so nothing is duplicated.
                     withContext(Dispatchers.IO) { copies.forEach { resaver.discard(it.second) } }
-                    _state.value = UiState.Finished(moved, failed, cancelled = true, keptOriginals = keep && moved > 0)
+                    _state.value = UiState.Finished(moved, failed, cancelled = true, keptOriginals = keep && moved > 0, years = years)
                     return@launch
                 }
                 // Trashing renames the original on disk, so its name is free for the copy either way.
@@ -213,7 +220,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             plan = null
-            _state.value = UiState.Finished(moved, failed, cancelled = false, keptOriginals = keep)
+            _state.value = UiState.Finished(moved, failed, cancelled = false, keptOriginals = keep, years = years)
         }
     }
 
@@ -470,6 +477,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         item.relativePath.isEmpty() -> "(no folder)"
         else -> "${item.volume}: ${item.relativePath}"
     }
+
+    private fun yearOf(epochMs: Long): Int = Instant.ofEpochMilli(epochMs).atZone(ZoneId.systemDefault()).year
 
     private fun freeBytes(): Long {
         val dir = getApplication<Application>().getExternalFilesDir(null) ?: return 0
