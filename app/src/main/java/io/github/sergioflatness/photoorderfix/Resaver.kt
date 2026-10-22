@@ -53,13 +53,22 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
             if (copied != item.sizeBytes) {
                 throw IOException("Copied $copied of ${item.sizeBytes} bytes for ${item.name}")
             }
-            // The copy stays byte-for-byte identical to the original: cloud backups (Google Photos)
-            // only recognise a re-saved photo as the same one when every byte matches, otherwise the
-            // Gallery shows it twice. So the date goes into the file time, not into the file.
-            // When the copy is published, Android re-reads the file and drops the DATE_TAKEN we set;
-            // files without a date inside then fall back to the file time.
+            // Where possible the copy stays byte-for-byte identical to the original: cloud backups
+            // (Google Photos) only recognise a re-saved photo as the same one when every byte matches,
+            // otherwise the Gallery shows it twice. So the date normally goes into the file time.
+            // When the copy is published, Android re-reads the file and drops the DATE_TAKEN we set.
             runCatching { setFileTime(newUri, date.epochMs) }
             resolver.update(newUri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+            // A photo Android found no capture date in (screenshots, downloads, or an EXIF date it
+            // rejected) is labelled by Instagram with its "date added", which for a copy is today.
+            // Write the date inside with its time zone so Android accepts it, even though the backup
+            // may then keep the photo twice.
+            if (!item.isVideo && item.mimeType in exifWritable && !hasCaptureDate(newUri)) {
+                runCatching {
+                    writeExifDate(newUri, date.epochMs)
+                    setFileTime(newUri, date.epochMs)
+                }
+            }
             return newUri
         } catch (e: Exception) {
             runCatching { resolver.delete(newUri, null, null) }
@@ -88,6 +97,15 @@ class Resaver(private val resolver: ContentResolver, private val zone: ZoneId = 
 
     /** Works for files this app created; Android's storage layer allows changing their times. */
     fun setFileTime(path: String, epochMs: Long): Boolean = runCatching { File(path).setLastModified(epochMs) }.getOrDefault(false)
+
+    private fun hasCaptureDate(uri: Uri): Boolean =
+        resolver.query(uri, arrayOf(MediaStore.MediaColumns.DATE_TAKEN), null, null, null)?.use { c ->
+            c.moveToFirst() && !c.isNull(0)
+        } ?: false
+
+    /** True when Android shows no capture date for the photo and its format lets us write one. */
+    fun needsDateInside(item: DeviceMedia): Boolean =
+        !item.hasMediaStoreDate && !item.isVideo && item.mimeType in exifWritable
 
     /**
      * Gives an existing photo a new date: written into the file where the format allows,
