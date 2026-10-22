@@ -29,8 +29,8 @@
     <string name="finished_hint">아직 예전 순서로 보이는 앱이 있다면 완전히 껐다가 다시 열어 주세요.</string>
     <string name="action_again">처음부터 다시</string>
     <string name="error">문제가 생겼어요: %1$s</string>
-    <string name="dates_to_repair">%1$d개는 파일 시각이 찍은 날과 많이 달라요 (예: 갤러리에서 날짜를 고친 사진). 카카오톡 같은 앱은 파일 시각으로 줄을 세워서, 이 사진들이 엉뚱한 자리에 보여요. 사진은 그대로 두고 시각만 찍은 날짜로 맞춰요.</string>
-    <string name="action_repair_dates">파일 시각 맞추기 (%1$d개)</string>
+    <string name="dates_to_repair">%1$d개는 다른 앱에서 날짜가 틀리게 보일 수 있어요 (예: 갤러리에서 날짜를 고친 사진, 인스타그램에서 \"오늘\"로 보이는 사진). 찍은 날짜로 맞춰요.</string>
+    <string name="action_repair_dates">날짜 맞추기 (%1$d개)</string>
     <string name="dates_repaired">%1$d개의 날짜를 되돌렸어요.</string>
     <string name="dates_repair_failed">%1$d개는 바꾸지 못했어요.</string>
     <string name="dates_repaired_hint">갤러리에 반영되기까지 잠시 걸릴 수 있어요. 그래도 날짜가 그대로면 갤러리를 완전히 껐다 켜 주세요.</string>
@@ -99,7 +99,7 @@
     <string name="faq_cloud_q">구글 포토 같은 클라우드에 사진이 두 번 올라가나요?</string>
     <string name="faq_cloud_a">다시 저장한 사본이 원본과 똑같아서 같은 사진으로 알아봐요. 그래도 두 장씩 보이면 갤러리의 클라우드 동기화를 잠깐 껐다 켜 보세요.</string>
     <string name="faq_still_wrong_q">고칠 게 없다는데 어떤 앱에서 순서가 이상해요</string>
-    <string name="faq_still_wrong_a">먼저 그 앱을 완전히 껐다 켜 보세요. 갤러리에서 사진 날짜를 직접 고쳤다면 \"파일 시각\"이 그날로 바뀌었을 수 있어요. 검사 화면에 \"파일 시각 맞추기\"가 나오면 눌러 주세요.</string>
+    <string name="faq_still_wrong_a">먼저 그 앱을 완전히 껐다 켜 보세요. 갤러리에서 사진 날짜를 직접 고쳤다면 \"파일 시각\"이 그날로 바뀌었을 수 있어요. 검사 화면에 \"날짜 맞추기\"가 나오면 눌러 주세요.</string>
     <string name="faq_crop_q">아이폰에서 자르거나 보정한 사진이 원래대로 보여요</string>
     <string name="faq_crop_a">아이폰은 원본과 편집 정보를 따로 저장하는데, 폰을 옮길 때 원본만 넘어와요. 이 앱으로는 편집을 되살릴 수 없어요. 아이클라우드(icloud.com)에서 편집된 사진을 내려받으면 돼요.</string>
     <string name="faq_privacy_q">제 사진이 어딘가로 전송되나요?</string>

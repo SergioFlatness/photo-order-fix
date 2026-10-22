@@ -217,7 +217,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Sets file times back to the real date, so the Gallery and file-time pickers show it in place. */
+    /**
+     * Sets file times back to the real date, so the Gallery and file-time pickers show it in place.
+     * Photos Android has no capture date for also get the date written inside, so Instagram stops
+     * labelling them by their "date added".
+     */
     fun repairDates() {
         val all = repairs
         if (all.isEmpty()) return
@@ -238,7 +242,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             withContext(Dispatchers.IO) {
                 work.forEachIndexed { i, item ->
                     val path = item.payload.dataPath
-                    if (path != null && resaver.setFileTime(path, item.date.epochMs)) {
+                    val ok = if (resaver.needsDateInside(item.payload)) {
+                        resaver.setDate(item.payload, item.date.epochMs)
+                    } else {
+                        path != null && resaver.setFileTime(path, item.date.epochMs)
+                    }
+                    if (path != null && ok) {
                         fixed++
                         paths += path
                     }
@@ -437,7 +446,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      */
     private fun needsDateRepair(item: PlanItem<DeviceMedia>): Boolean {
         val media = item.payload
-        if (media.dataPath == null || item.date.source == DateSource.MODIFIED) return false
+        if (media.dataPath == null) return false
+        // Instagram labels a photo with no capture date by its "date added", so a copy this app
+        // re-saved shows up as taken today.
+        if (resaver.needsDateInside(media) && kotlin.math.abs(item.addedSec * 1000 - item.date.epochMs) > ONE_DAY_MS) return true
+        if (item.date.source == DateSource.MODIFIED) return false
         return kotlin.math.abs(media.modifiedSec * 1000 - item.date.epochMs) > ONE_DAY_MS
     }
 

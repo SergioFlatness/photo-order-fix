@@ -29,8 +29,8 @@
     <string name="finished_hint">If an app still shows the old order, close it completely and open it again.</string>
     <string name="action_again">Start over</string>
     <string name="error">Something went wrong: %1$s</string>
-    <string name="dates_to_repair">%1$d items have a file time that is far from the day they were taken, for example after a date edit in the Gallery. Apps like KakaoTalk sort by file time, so these show up in the wrong place there. This only sets the time back to the real date; the photos themselves are not changed.</string>
-    <string name="action_repair_dates">Fix file times (%1$d items)</string>
+    <string name="dates_to_repair">%1$d items may show the wrong date in other apps, for example after a date edit in the Gallery, or photos Instagram labels as \"Today\". This sets them back to the day they were taken.</string>
+    <string name="action_repair_dates">Fix dates (%1$d items)</string>
     <string name="dates_repaired">Dates fixed for %1$d items.</string>
     <string name="dates_repair_failed">%1$d items could not be changed.</string>
     <string name="dates_repaired_hint">The Gallery may take a moment to update. If dates still look old, close the Gallery completely and open it again.</string>
@@ -99,7 +99,7 @@
     <string name="faq_cloud_q">Will Google Photos or other cloud backups get duplicates?</string>
     <string name="faq_cloud_a">Re-saved copies are identical to the originals, so they are recognised as the same photos. If you still see some twice, turn the Gallery\'s cloud sync off and on again.</string>
     <string name="faq_still_wrong_q">The app says nothing needs fixing, but an app still shows the wrong order</string>
-    <string name="faq_still_wrong_a">Close that app completely and open it again. If you edited a photo\'s date in the Gallery, its file time may now be today. When the scan offers \"Fix file times\", tap it.</string>
+    <string name="faq_still_wrong_a">Close that app completely and open it again. If you edited a photo\'s date in the Gallery, its file time may now be today. When the scan offers \"Fix dates\", tap it.</string>
     <string name="faq_crop_q">Photos I cropped or edited on the iPhone look unedited</string>
     <string name="faq_crop_a">The iPhone keeps the original and the edits separately, and only the original moves to the new phone. This app cannot bring the edits back. You can download the edited photos from icloud.com instead.</string>
     <string name="faq_privacy_q">Are my photos sent anywhere?</string>
