@@ -222,10 +222,13 @@ private fun ChartCard(total: Int, toFix: Int, size: String) {
                         .background(fixColor)
                         .graphicsLayer { alpha = pop.value.coerceIn(0f, 1f) }
                         .drawBehind {
+                            // this.size: the card's "size" parameter (storage text) would shadow DrawScope.size.
+                            val w = this.size.width
+                            val h = this.size.height
                             val step = 10.dp.toPx()
-                            var x = -size.height
-                            while (x < size.width) {
-                                drawLine(stripeColor, Offset(x, size.height), Offset(x + size.height, 0f), strokeWidth = step / 2)
+                            var x = -h
+                            while (x < w) {
+                                drawLine(stripeColor, Offset(x, h), Offset(x + h, 0f), strokeWidth = step / 2)
                                 x += step
                             }
                         },
