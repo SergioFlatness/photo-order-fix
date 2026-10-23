@@ -48,7 +48,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -306,17 +309,25 @@ fun PhotoTile(label: String, shade: Int, modifier: Modifier = Modifier, width: D
     ) {
         Box(
             Modifier
-                .padding(7.dp)
+                .align(Alignment.TopCenter)
+                .padding(top = 7.dp)
                 .width(38.dp)
                 .height(18.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(Color.White.copy(alpha = 0.9f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111B3A))
+            // The theme's body line height (24sp) is taller than the 18dp pill, which pushed the year below center.
+            Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111B3A), style = PillText)
         }
     }
 }
+
+private val PillText = TextStyle(
+    lineHeight = 10.sp,
+    platformStyle = PlatformTextStyle(includeFontPadding = false),
+    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
+)
 
 /** Gentle up-and-down float (3dp), shared by the photo illustrations. */
 fun Modifier.floating(): Modifier = composed {
