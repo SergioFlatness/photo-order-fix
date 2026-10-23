@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -66,10 +68,13 @@ fun HomeScreen(undo: UndoLog?, onUndo: () -> Unit, onHelp: () -> Unit, onScan: (
             Text(stringResource(R.string.intro_body), fontSize = 15.sp, lineHeight = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         AppCard(padding = 20.dp) {
-            FitBox(316.dp, 210.dp) { OrderIllustration() }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
-                Text(stringResource(R.string.intro_before), Modifier.weight(1f), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(stringResource(R.string.intro_after), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            // Captions live inside the drawing so they stay under their photos when the card is wider (unfolded Fold).
+            FitBox(316.dp, 236.dp) {
+                Box {
+                    OrderIllustration()
+                    Caption(stringResource(R.string.intro_before), centerX = 67, FontWeight.Medium, MaterialTheme.colorScheme.onSurfaceVariant)
+                    Caption(stringResource(R.string.intro_after), centerX = 258, FontWeight.Bold, MaterialTheme.colorScheme.primary)
+                }
             }
         }
         if (undo != null) {
@@ -79,7 +84,7 @@ fun HomeScreen(undo: UndoLog?, onUndo: () -> Unit, onHelp: () -> Unit, onScan: (
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     listOf(R.string.intro_step1, R.string.intro_step2, R.string.intro_step3).forEachIndexed { i, step ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(40.dp).clip(CookieShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
                                 Text("${i + 1}", fontSize = 16.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimaryContainer)
                             }
                             Text(stringResource(step), Modifier.padding(start = 14.dp), fontSize = 15.sp, fontWeight = FontWeight.Medium)
@@ -118,6 +123,14 @@ private fun UndoBanner(log: UndoLog, onUndo: () -> Unit) {
         ) {
             Text(stringResource(R.string.action_undo), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
         }
+    }
+}
+
+/** A label centered under one photo group of [OrderIllustration], in its 316 x 236 coordinates. */
+@Composable
+private fun Caption(text: String, centerX: Int, weight: FontWeight, color: Color) {
+    Box(Modifier.offset((centerX - 80).dp, 214.dp).width(160.dp), contentAlignment = Alignment.TopCenter) {
+        Text(text, fontSize = 12.sp, fontWeight = weight, color = color, maxLines = 1, softWrap = false)
     }
 }
 

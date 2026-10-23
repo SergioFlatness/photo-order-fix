@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -203,28 +204,40 @@ private fun ChartCard(total: Int, toFix: Int, size: String) {
         grow.animateTo(1f, tween(700, easing = FastOutSlowInEasing))
         pop.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 400f))
     }
-    val fixColor = TileRamp[3]
-    val keptColor = TileRamp[0]
+    val keptColor = TileRamp[3]
+    val fixColor = TileRamp[0]
+    val stripeColor = TileRamp[1]
     AppCard {
         Text(stringResource(R.string.chart_total, count(total)), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(Modifier.padding(top = 12.dp).fillMaxWidth().height(32.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            // A few photos out of thousands would be invisible, so the fix part keeps a minimum width.
-            val fixWeight = if (toFix == 0) 0f else maxOf(toFix.toFloat(), total * 0.05f)
-            if (kept > 0) Box(Modifier.weight(kept.toFloat()).fillMaxHeight()) {
-                Box(Modifier.fillMaxWidth(grow.value.coerceAtLeast(0.001f)).fillMaxHeight().clip(RoundedCornerShape(12.dp)).background(keptColor))
+        // One continuous bar that grows from the left; the part still to fix is striped so it reads as "not sorted yet".
+        Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(32.dp)) {
+            Row(Modifier.fillMaxWidth(grow.value.coerceAtLeast(0.001f)).fillMaxHeight().clip(RoundedCornerShape(12.dp))) {
+                // A few photos out of thousands would be invisible, so the fix part keeps a minimum width.
+                val fixWeight = if (toFix == 0) 0f else maxOf(toFix.toFloat(), total * 0.05f)
+                if (kept > 0) Box(Modifier.weight(kept.toFloat()).fillMaxHeight().background(keptColor))
+                if (toFix > 0) Box(
+                    Modifier
+                        .weight(fixWeight)
+                        .fillMaxHeight()
+                        .background(fixColor)
+                        .graphicsLayer { alpha = pop.value.coerceIn(0f, 1f) }
+                        .drawBehind {
+                            // this.size: the card's "size" parameter (storage text) would shadow DrawScope.size.
+                            val w = this.size.width
+                            val h = this.size.height
+                            val step = 10.dp.toPx()
+                            var x = -h
+                            while (x < w) {
+                                drawLine(stripeColor, Offset(x, h), Offset(x + h, 0f), strokeWidth = step / 2)
+                                x += step
+                            }
+                        },
+                )
             }
-            if (toFix > 0) Box(
-                Modifier
-                    .weight(fixWeight)
-                    .fillMaxHeight()
-                    .graphicsLayer { scaleX = pop.value; scaleY = pop.value; alpha = pop.value.coerceIn(0f, 1f) }
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(fixColor),
-            )
         }
         Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Legend(keptColor, stringResource(R.string.chart_kept, count(kept)))
-            if (toFix > 0) Legend(fixColor, stringResource(R.string.chart_fix, count(toFix)), Modifier.padding(start = 16.dp))
+            if (toFix > 0) Legend(stripeColor, stringResource(R.string.chart_fix, count(toFix)), Modifier.padding(start = 16.dp))
         }
         if (toFix > 0) {
             HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
