@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Three stacked photo cards with an upward arrow: "newest back on top". -->
+<!-- Four photo cards stacked in order, like the home screen illustration. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#99FFFFFF" android:pathData="M34,62h32v8h-32z" />
-    <path android:fillColor="#CCFFFFFF" android:pathData="M34,50h32v8h-32z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M34,38h32v8h-32z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M74,36l-6,8h4v26h4v-26h4z" />
+    <group android:pivotX="54" android:pivotY="54" android:scaleX="0.88" android:scaleY="0.88" android:translateY="-3.5">
+        <path android:fillColor="#FF9DB6FF" android:pathData="M37,64h34a7,7 0 0 1 7,7v10a7,7 0 0 1 -7,7h-34a7,7 0 0 1 -7,-7v-10a7,7 0 0 1 7,-7z" />
+        <path android:fillColor="#2E1F2A44" android:pathData="M37.5,68h8.0a2.5,2.5 0 0 1 2.5,2.5v0.0a2.5,2.5 0 0 1 -2.5,2.5h-8.0a2.5,2.5 0 0 1 -2.5,-2.5v-0.0a2.5,2.5 0 0 1 2.5,-2.5z" />
+        <path android:fillColor="#FFC2D3FF" android:pathData="M37,52h34a7,7 0 0 1 7,7v10a7,7 0 0 1 -7,7h-34a7,7 0 0 1 -7,-7v-10a7,7 0 0 1 7,-7z" />
+        <path android:fillColor="#2E1F2A44" android:pathData="M37.5,56h8.0a2.5,2.5 0 0 1 2.5,2.5v0.0a2.5,2.5 0 0 1 -2.5,2.5h-8.0a2.5,2.5 0 0 1 -2.5,-2.5v-0.0a2.5,2.5 0 0 1 2.5,-2.5z" />
+        <path android:fillColor="#FFE3EBFF" android:pathData="M37,40h34a7,7 0 0 1 7,7v10a7,7 0 0 1 -7,7h-34a7,7 0 0 1 -7,-7v-10a7,7 0 0 1 7,-7z" />
+        <path android:fillColor="#2E1F2A44" android:pathData="M37.5,44h8.0a2.5,2.5 0 0 1 2.5,2.5v0.0a2.5,2.5 0 0 1 -2.5,2.5h-8.0a2.5,2.5 0 0 1 -2.5,-2.5v-0.0a2.5,2.5 0 0 1 2.5,-2.5z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M37,28h34a7,7 0 0 1 7,7v10a7,7 0 0 1 -7,7h-34a7,7 0 0 1 -7,-7v-10a7,7 0 0 1 7,-7z" />
+        <path android:fillColor="#2E1F2A44" android:pathData="M37.5,32h8.0a2.5,2.5 0 0 1 2.5,2.5v0.0a2.5,2.5 0 0 1 -2.5,2.5h-8.0a2.5,2.5 0 0 1 -2.5,-2.5v-0.0a2.5,2.5 0 0 1 2.5,-2.5z" />
+    </group>
 </vector>
