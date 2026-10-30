@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -221,6 +222,8 @@ private fun ChartCard(total: Int, toFix: Int, size: String) {
                         .fillMaxHeight()
                         .background(fixColor)
                         .graphicsLayer { alpha = pop.value.coerceIn(0f, 1f) }
+                        // The stripes start left of the segment; without the clip they paint over the kept part.
+                        .clipToBounds()
                         .drawBehind {
                             // this.size: the card's "size" parameter (storage text) would shadow DrawScope.size.
                             val w = this.size.width

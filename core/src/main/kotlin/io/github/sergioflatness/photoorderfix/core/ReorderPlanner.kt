@@ -31,13 +31,20 @@ data class ReorderPlan<T>(
 
 object ReorderPlanner {
 
+    // Photos taken while the scan runs are not "in the future".
+    private const val FUTURE_SLACK_SEC = 10 * 60L
+
     /**
      * Re-saving a file gives it a brand new "added" time, newer than everything else.
      * So the oldest stretch of the library whose added times already rise with the
      * capture dates can stay as it is, and everything after the first out-of-order
      * item has to be re-saved, oldest first.
+     *
+     * An item whose added time lies in the future (a wrong clock, or an app that wrote a bad
+     * value) would sit above every copy we make, so the photos after it could never be fixed.
+     * It counts as out of place too: its own copy gets a real added time.
      */
-    fun <T> plan(items: List<PlanItem<T>>): ReorderPlan<T> {
+    fun <T> plan(items: List<PlanItem<T>>, nowSec: Long = System.currentTimeMillis() / 1000): ReorderPlan<T> {
         val (eligible, skipped) = items.partition { it.eligible }
         val chronological = eligible.sortedWith(
             compareBy<PlanItem<T>>({ it.date.epochMs }, { it.addedSec }, { it.id })
@@ -46,7 +53,7 @@ object ReorderPlanner {
         var keep = 0
         var lastAdded = Long.MIN_VALUE
         for (item in chronological) {
-            if (item.addedSec < lastAdded) break
+            if (item.addedSec < lastAdded || item.addedSec > nowSec + FUTURE_SLACK_SEC) break
             lastAdded = item.addedSec
             keep++
         }

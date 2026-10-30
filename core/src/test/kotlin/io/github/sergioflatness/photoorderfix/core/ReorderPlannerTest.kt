@@ -39,6 +39,15 @@ class ReorderPlannerTest {
     }
 
     @Test
+    fun `an item added in the future is re-saved with everything after it`() {
+        // Item 2 claims to be added later than any copy could be, so 3 and 4 would stay stuck below it.
+        val items = listOf(item(1, 100, 1_000), item(2, 99_999, 2_000), item(3, 300, 3_000), item(4, 400, 4_000))
+        val plan = ReorderPlanner.plan(items, nowSec = 1_000)
+        assertEquals(listOf(1L), plan.kept.map { it.id })
+        assertEquals(listOf(2L, 3L, 4L), plan.toResave.map { it.id })
+    }
+
+    @Test
     fun `ineligible items are left alone`() {
         val plan = ReorderPlanner.plan(listOf(item(1, 100, 2_000), item(2, 50, 1_000, eligible = false)))
         assertEquals(listOf(1L), plan.kept.map { it.id })
