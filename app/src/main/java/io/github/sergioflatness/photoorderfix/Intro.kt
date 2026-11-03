@@ -65,7 +65,11 @@ fun HomeScreen(undo: UndoLog?, onUndo: () -> Unit, onHelp: () -> Unit, onScan: (
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Headline(stringResource(R.string.intro_headline), size = 34)
-            Text(stringResource(R.string.intro_body), fontSize = 15.sp, lineHeight = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column {
+                Text(stringResource(R.string.intro_body), fontSize = 15.sp, lineHeight = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // People check the Gallery first and would think nothing happened.
+                Text(stringResource(R.string.intro_gallery), fontSize = 15.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            }
         }
         AppCard(padding = 20.dp) {
             // Captions live inside the drawing so they stay under their photos when the card is wider (unfolded Fold).

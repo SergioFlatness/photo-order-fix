@@ -22,6 +22,7 @@
     <string name="help_title">Help</string>
     <string name="intro_headline">Fix shuffled photo\norder in one go</string>
     <string name="intro_body">Fixes photos that show out of order in Instagram, KakaoTalk and other apps.</string>
+    <string name="intro_gallery">Your Gallery already sorts by date taken, so it won\'t change.</string>
     <string name="intro_before">Now: shuffled</string>
     <string name="intro_after">After: order taken</string>
     <string name="intro_step1">Check your photos</string>
@@ -83,7 +84,8 @@
 
     <!-- Done -->
     <string name="finished_title">All fixed!</string>
-    <string name="finished_body">Other apps now show your photos\nin the order taken.</string>
+    <string name="finished_body">Check the order in Instagram or KakaoTalk.</string>
+    <string name="finished_gallery">Your Gallery already sorts by date taken, so it looks the same.</string>
     <string name="finished_saved">Re-saved %1$s in the order taken</string>
     <string name="finished_cancelled_title">Stopped</string>
     <string name="finished_cancelled">%1$s were re-saved before you declined. The rest are unchanged.</string>
