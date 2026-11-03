@@ -22,6 +22,7 @@
     <string name="help_title">도움말</string>
     <string name="intro_headline">뒤섞인 사진 순서를\n한 번에 고쳐요</string>
     <string name="intro_body">인스타그램, 카카오톡 등 다른 앱에서 뒤섞인 사진을 고쳐요.</string>
+    <string name="intro_gallery">갤러리는 원래 찍은 순서라 바뀌지 않아요.</string>
     <string name="intro_before">지금: 뒤죽박죽</string>
     <string name="intro_after">고친 후: 찍은 순서</string>
     <string name="intro_step1">사진 검사하기</string>
@@ -83,7 +84,8 @@
 
     <!-- Done -->
     <string name="finished_title">다 고쳤어요!</string>
-    <string name="finished_body">이제 다른 앱에서도\n찍은 순서대로 보여요.</string>
+    <string name="finished_body">인스타그램, 카카오톡에서 확인해 보세요.</string>
+    <string name="finished_gallery">갤러리는 원래 찍은 순서라 그대로예요.</string>
     <string name="finished_saved">%1$s장을 찍은 순서대로 다시 저장했어요</string>
     <string name="finished_cancelled_title">중단했어요</string>
     <string name="finished_cancelled">거절하기 전까지 %1$s장을 다시 저장했고, 나머지는 그대로예요.</string>

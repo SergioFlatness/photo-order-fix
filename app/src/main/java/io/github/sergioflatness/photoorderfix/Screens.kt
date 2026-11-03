@@ -457,6 +457,14 @@ fun FinishedScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
+            if (!cancelled) Text(
+                stringResource(R.string.finished_gallery),
+                fontSize = 16.sp,
+                lineHeight = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+            )
         }
         if (moved > 0) AppCard {
             val labels = years.takeLast(4).map { it.toString() }.ifEmpty { listOf("") }
