@@ -6,3 +6,6 @@ local.properties
 .DS_Store
 captures/
 .kotlin/
+
+# Claude Code personal settings (may contain tokens or keys)
+.claude/settings.local.json
